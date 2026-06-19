@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:device_frame/device_frame.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,7 +31,10 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: DeviceFrame(
+        device: Devices.android.samsungGalaxyS20,
+        screen: const MyHomePage(title: 'Flutter Demo Home Page'),
+      ),
     );
   }
 }
