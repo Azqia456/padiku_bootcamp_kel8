@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:device_frame/device_frame.dart';
 import 'utils/app_colors.dart';
 import 'utils/routes.dart';
-import 'screens/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
