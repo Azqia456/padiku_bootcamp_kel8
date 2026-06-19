@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SITANI',
+      title: 'PADIKU',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: AppColors.riceGreen,

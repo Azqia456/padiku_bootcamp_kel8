@@ -17,162 +17,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const DataLahanModule(),
     const JadwalTanamModule(),
     const PrediksiPanenModule(),
-    const PupukSubsidiModule(),
-    const NeracaPanganModule(),
-    const PetaPertanianModule(),
-    const LaporanModule(),
-    const PengaturanModule(),
+    const MenuModule(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SITANI'),
+        title: const Text('PADIKU'),
         backgroundColor: AppColors.riceGreen,
         foregroundColor: AppColors.riceWhite,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, Routes.login);
+            },
+          ),
+        ],
       ),
       body: _screens[_selectedIndex],
-      drawer: Drawer(
-        child: Container(
-          color: AppColors.riceWhite,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.riceGradient,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.agriculture,
-                      size: 48,
-                      color: AppColors.riceWhite,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'SITANI',
-                      style: TextStyle(
-                        color: AppColors.riceWhite,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Sistem Informasi Tanaman Padi',
-                      style: TextStyle(
-                        color: AppColors.riceCream,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Dashboard'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 0;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.landscape),
-                title: const Text('Data Lahan'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 1;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: const Text('Jadwal Tanam'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 2;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.grain),
-                title: const Text('Prediksi Panen'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 3;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.eco),
-                title: const Text('Pupuk Subsidi'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 4;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.restaurant),
-                title: const Text('Neraca Pangan'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 5;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.map),
-                title: const Text('Peta Pertanian Karawang'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 6;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.assessment),
-                title: const Text('Laporan'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 7;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings),
-                title: const Text('Pengaturan'),
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 8;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: AppColors.errorColor),
-                title: const Text('Keluar', style: TextStyle(color: AppColors.errorColor)),
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, Routes.login);
-                },
-              ),
-            ],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.riceGreen,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.landscape),
+            label: 'Lahan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Jadwal',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.grain),
+            label: 'Panen',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu),
+            label: 'Menu',
+          ),
+        ],
       ),
     );
   }
@@ -204,7 +101,7 @@ class HomeDashboard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Selamat Datang di SITANI',
+                    'Selamat Datang di PADIKU',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -470,6 +367,119 @@ class PengaturanModule extends StatelessWidget {
         {'title': 'Kelola Pengguna', 'route': Routes.kelolaPengguna},
         {'title': 'Hak Akses', 'route': Routes.hakAkses},
       ],
+    );
+  }
+}
+
+class MenuModule extends StatelessWidget {
+  const MenuModule({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Menu Lainnya',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildMenuItem(
+            context,
+            'Pupuk Subsidi',
+            Icons.eco,
+            AppColors.riceGreen,
+            const PupukSubsidiModule(),
+          ),
+          _buildMenuItem(
+            context,
+            'Neraca Pangan',
+            Icons.restaurant,
+            AppColors.riceYellow,
+            const NeracaPanganModule(),
+          ),
+          _buildMenuItem(
+            context,
+            'Peta Pertanian Karawang',
+            Icons.map,
+            AppColors.riceOrange,
+            const PetaPertanianModule(),
+          ),
+          _buildMenuItem(
+            context,
+            'Laporan',
+            Icons.assessment,
+            AppColors.riceGold,
+            const LaporanModule(),
+          ),
+          _buildMenuItem(
+            context,
+            'Pengaturan',
+            Icons.settings,
+            AppColors.riceBrown,
+            const PengaturanModule(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    Widget screen,
+  ) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => screen),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
