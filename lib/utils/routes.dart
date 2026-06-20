@@ -32,9 +32,11 @@ import '../screens/laporan/laporan_ketahanan_pangan_screen.dart';
 import '../screens/pengaturan/profil_screen.dart';
 import '../screens/pengaturan/kelola_pengguna_screen.dart';
 import '../screens/pengaturan/hak_akses_screen.dart';
+import '../screens/register_screen.dart';
 
 class Routes {
   static const String login = '/login';
+  static const String register = '/register';
   static const String dashboard = '/dashboard';
   
   // Data Lahan
@@ -87,6 +89,7 @@ class Routes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       login: (context) => const LoginScreen(),
+      register: (context) => const RegisterScreen(),
       dashboard: (context) => const DashboardScreen(),
       
       // Data Lahan

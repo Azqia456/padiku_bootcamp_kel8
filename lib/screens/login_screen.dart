@@ -1,7 +1,5 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
-
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
 
@@ -39,6 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
 
     if (_formKey.currentState?.validate() ?? false) {
+
       Navigator.pushReplacementNamed(context, Routes.dashboard);
     }
   }
@@ -308,7 +307,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     TextButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                             
+                                      },
                                       style: TextButton.styleFrom(
                                         foregroundColor: AppColors.riceGreen,
                                         padding: EdgeInsets.zero,
@@ -319,7 +320,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       child: const Text('Lupa kata sandi?'),
                                     ),
                                     TextButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                  
+                                        Navigator.pushNamed(context, Routes.register);
+                                      },
                                       style: TextButton.styleFrom(
                                         foregroundColor: AppColors.riceGreen,
                                         padding: EdgeInsets.zero,
