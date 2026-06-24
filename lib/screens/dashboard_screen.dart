@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
+import 'jadwal_tanam/input_jadwal_screen.dart';
+import 'jadwal_tanam/kalender_tanam_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -1649,29 +1651,49 @@ class JadwalTanamModule extends StatelessWidget {
               value: '12 Juli 2026',
               icon: Icons.flag_rounded,
               iconColor: AppColors.riceYellow,
+                ),
+              ],
             ),
-          ],
-        ),
         const SizedBox(height: 24),
         _buildSectionHeading(
           'Akses cepat',
           'Fitur pencatatan dan kalender tetap sama, tampilannya dibuat lebih selaras dengan beranda.',
         ),
         const SizedBox(height: 14),
+        
+        // PANDUAN PERUBAHAN 1: Tambahkan fungsi Navigator.push di sini
         _buildJadwalCard(
           context,
           'Input Tanggal Tanam',
           'Catat tanggal mulai tanam',
           Icons.event_available_rounded,
           AppColors.riceGreen,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const InputJadwalTanamScreen(),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 12),
+        
+        // PANDUAN PERUBAHAN 2: Tambahkan fungsi Navigator.push di sini
         _buildJadwalCard(
           context,
           'Kalender Tanam',
           'Lihat jadwal tanaman',
           Icons.calendar_month_rounded,
           AppColors.riceYellow,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const KalenderTanamScreen(),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 24),
         _buildSectionHeading(
@@ -1714,19 +1736,21 @@ class JadwalTanamModule extends StatelessWidget {
     );
   }
 
+  // PANDUAN PERUBAHAN 3: Perbarui method ini agar menerima parameter onTap
   Widget _buildJadwalCard(
     BuildContext context,
     String title,
     String subtitle,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    required VoidCallback onTap,
+  }) {
     return _buildModernActionCard(
       title: title,
       subtitle: subtitle,
       icon: icon,
       color: color,
-      onTap: () {},
+      onTap: onTap, // Sekarang fungsionalitas tap diteruskan dengan benar
     );
   }
 
