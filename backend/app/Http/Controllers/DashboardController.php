@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FertilizerSchedule;
+use App\Models\Notification;
 use App\Models\Planting;
 use App\Models\PestReport;
 use App\Models\User;
@@ -99,5 +101,72 @@ class DashboardController extends Controller
             ->get();
         
         return view('dashboard.data-analysis', compact('pestTypes', 'severityDistribution', 'riceVarieties'));
+    }
+
+    public function farmers()
+    {
+        $farmers = User::where('user_type', 'petani')
+            ->withCount('plantings')
+            ->orderBy('name')
+            ->get();
+
+        return view('dashboard.farmers', compact('farmers'));
+    }
+
+    public function plantings()
+    {
+        $plantings = Planting::with('user')
+            ->orderBy('planting_date', 'desc')
+            ->get();
+
+        return view('dashboard.plantings', compact('plantings'));
+    }
+
+    public function pestMonitoring()
+    {
+        $pestReports = PestReport::with(['user', 'planting'])
+            ->orderBy('report_date', 'desc')
+            ->get();
+
+        $activeCount = PestReport::where('status', '!=', 'resolved')->count();
+
+        $severityStats = PestReport::selectRaw('severity, COUNT(*) as count')
+            ->groupBy('severity')
+            ->orderByDesc('count')
+            ->get();
+
+        return view('dashboard.pest-monitoring', compact('pestReports', 'activeCount', 'severityStats'));
+    }
+
+    public function fertilizer()
+    {
+        $schedules = FertilizerSchedule::with(['user', 'planting'])
+            ->orderBy('scheduled_date', 'desc')
+            ->get();
+
+        return view('dashboard.fertilizer', compact('schedules'));
+    }
+
+    public function earlyWarning()
+    {
+        $criticalPests = PestReport::whereIn('severity', ['high', 'critical'])
+            ->where('status', '!=', 'resolved')
+            ->with(['user', 'planting'])
+            ->orderBy('report_date', 'desc')
+            ->get();
+
+        $recentNotifications = Notification::where('type', 'warning')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        $upcomingHarvests = Planting::where('expected_harvest_date', '<=', now()->addDays(14))
+            ->where('expected_harvest_date', '>=', now())
+            ->where('status', '!=', 'harvested')
+            ->with('user')
+            ->orderBy('expected_harvest_date')
+            ->get();
+
+        return view('dashboard.early-warning', compact('criticalPests', 'recentNotifications', 'upcomingHarvests'));
     }
 }

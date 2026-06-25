@@ -29,6 +29,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'user_type' => ['required', 'in:petani,kelompok_tani,dinas_pertanian'],
         ];
     }
 
@@ -46,6 +47,14 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        if (Auth::user()->user_type !== $this->input('user_type')) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'user_type' => 'Tipe pengguna tidak sesuai dengan akun Anda.',
             ]);
         }
 
