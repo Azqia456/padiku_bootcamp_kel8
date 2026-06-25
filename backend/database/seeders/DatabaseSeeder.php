@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,11 +13,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        // Create admin user for Dinas Pertanian
+        User::create([
+            'name' => 'Admin PADIKU',
+            'email' => 'adminpadiku@gmail.com',
+            'password' => bcrypt('adminpadiku'),
+            'user_type' => 'dinas_pertanian',
+            'phone' => '081234567890',
+            'address' => 'Kantor Dinas Pertanian Kabupaten Karawang',
+            'district' => 'Karawang',
+        ]);
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        // Create test farmer user
+        User::create([
+            'name' => 'Petani Test',
+            'email' => 'petani@test.com',
+            'password' => bcrypt('petani123'),
+            'user_type' => 'petani',
+            'phone' => '081234567891',
+            'address' => 'Desa Test, Kecamatan Test',
+            'district' => 'Telukjambe',
+        ]);
     }
 }
