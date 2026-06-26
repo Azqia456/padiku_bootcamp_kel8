@@ -593,11 +593,30 @@ Widget _buildModernStatusTile({
   );
 }
 
+String? _getPestAsset(String pest) {
+  switch (pest) {
+    case 'Wereng':
+      return 'assets/images/wareng.png';
+    case 'Walang Sangit':
+      return 'assets/images/walang_sangit.png';
+    case 'Belalang':
+      return 'assets/images/belalang.png';
+    case 'Ulat Grayak':
+      return 'assets/images/ulat_grayak.png';
+    case 'Penyakit Blas':
+      return 'assets/images/blas.png';
+    default:
+      return null;
+  }
+}
+
 Widget _buildModernPestCard({
   required String pest,
   required bool isSelected,
   required VoidCallback onTap,
 }) {
+  final assetPath = _getPestAsset(pest);
+
   return Material(
     color: Colors.transparent,
     child: InkWell(
@@ -633,13 +652,21 @@ Widget _buildModernPestCard({
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  Icons.bug_report_rounded,
-                  color: isSelected
-                      ? AppColors.riceGreen
-                      : Colors.grey.shade500,
-                  size: 28,
-                ),
+                child: assetPath != null
+                    ? Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Image.asset(
+                          assetPath,
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    : Icon(
+                        Icons.bug_report_rounded,
+                        color: isSelected
+                            ? AppColors.riceGreen
+                            : Colors.grey.shade500,
+                        size: 28,
+                      ),
               ),
               const SizedBox(height: 12),
               Text(
