@@ -30,7 +30,11 @@ import '../screens/laporan/laporan_panen_screen.dart';
 import '../screens/laporan/laporan_pupuk_screen.dart';
 import '../screens/laporan/laporan_ketahanan_pangan_screen.dart';
 import '../screens/pengaturan/profil_screen.dart';
+import '../screens/pengaturan/pengaturan_profil_screen.dart';
+import '../screens/pengaturan/pusat_bantuan_screen.dart';
+import '../screens/pengaturan/tentang_padiku_screen.dart';
 import '../screens/pengaturan/kelola_pengguna_screen.dart';
+import '../screens/pengaturan/keamanan_akun_screen.dart';
 import '../screens/pengaturan/hak_akses_screen.dart';
 import '../screens/register_screen.dart';
 
@@ -83,6 +87,10 @@ class Routes {
   
   // Pengaturan
   static const String profil = '/pengaturan/profil';
+  static const String pengaturanProfil = '/pengaturan/pengaturan-profil';
+  static const String keamananAkun = '/pengaturan/keamanan-akun';
+  static const String pusatBantuan = '/pengaturan/pusat-bantuan';
+  static const String tentangPadiku = '/pengaturan/tentang-padiku';
   static const String kelolaPengguna = '/pengaturan/kelola-pengguna';
   static const String hakAkses = '/pengaturan/hak-akses';
 
@@ -136,6 +144,10 @@ class Routes {
       
       // Pengaturan
       profil: (context) => const ProfilScreen(),
+      pengaturanProfil: (context) => const PengaturanProfilScreen(),
+      keamananAkun: (context) => const KeamananAkunScreen(),
+      pusatBantuan: (context) => const PusatBantuanScreen(),
+      tentangPadiku: (context) => const TentangPadikuScreen(),
       kelolaPengguna: (context) => const KelolaPenggunaScreen(),
       hakAkses: (context) => const HakAksesScreen(),
     };

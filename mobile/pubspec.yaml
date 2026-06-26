@@ -59,6 +59,7 @@ flutter:
     - assets/images/logo_padi.png
     - assets/images/bg.jpg
     - assets/images/bg_db.png
+    # Tambahkan baris di bawah ini:
     - assets/images/belalang.png
     - assets/images/blas.png
     - assets/images/ulat_grayak.png

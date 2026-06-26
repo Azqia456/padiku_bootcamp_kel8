@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
-import 'jadwal_tanam/input_jadwal_screen.dart';
-import 'jadwal_tanam/kalender_tanam_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -152,9 +150,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
+        if (index == 4) {
+          // Navigate to Profil screen
+          Navigator.pushNamed(context, Routes.profil);
+        } else {
+          setState(() {
+            _selectedIndex = index;
+          });
+        }
       },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
@@ -1485,169 +1488,46 @@ class DataLahanModule extends StatelessWidget {
           'Semua fitur lama tetap tersedia, hanya tampilannya dibuat lebih rapi dan mudah dipindai.',
         ),
         const SizedBox(height: 14),
-        _buildModernActionCard(
-          title: 'Tambah Lahan',
-          subtitle: 'Tambah lahan baru ke dalam sistem',
-          icon: Icons.add_circle_outline_rounded,
-          color: AppColors.riceGreen,
-          onTap: () {
-            Navigator.pushNamed(context, Routes.tambahLahan);
-          },
-        ),
-        const SizedBox(height: 24),
-        _buildSectionHeading(
-          'Daftar Lahan',
-          'Kelola dan pantau semua lahan pertanian Anda di sini.',
-        ),
-        const SizedBox(height: 14),
-        _buildLahanListCard(
+        _buildLahanCard(
           context,
-          'Sawah Blok A-12',
-          '2.5 Hektar',
-          'Desa Telukjambe, Karawang',
-          'Subur',
+          'Tambah Lahan',
+          'Tambah lahan baru ke dalam sistem',
+          Icons.add_circle_outline_rounded,
+          AppColors.riceGreen,
         ),
         const SizedBox(height: 12),
-        _buildLahanListCard(
+        _buildLahanCard(
           context,
-          'Lahan Utara Sentul',
-          '1.8 Hektar',
-          'Cikampek Selatan, Karawang',
-          'Panen',
+          'Detail Lahan',
+          'Lihat detail informasi lahan',
+          Icons.info_outline_rounded,
+          AppColors.riceYellow,
         ),
         const SizedBox(height: 12),
-        _buildLahanListCard(
+        _buildLahanCard(
           context,
-          'Bibit Unggul Karawang',
-          '0.7 Hektar',
-          'Kian Timur, Karawang',
-          'Terdaftar',
+          'Lokasi Lahan',
+          'Lihat lokasi lahan di peta',
+          Icons.map_outlined,
+          AppColors.riceOrange,
         ),
       ],
     );
   }
 
-  Widget _buildLahanListCard(
+  Widget _buildLahanCard(
     BuildContext context,
-    String name,
-    String luas,
-    String lokasi,
-    String status,
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
   ) {
-    return InkWell(
-      onTap: () {
-        Navigator.pushNamed(context, Routes.detailLahan);
-      },
-      borderRadius: BorderRadius.circular(18),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 140,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                color: Colors.grey.shade300,
-              ),
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.riceLightGreen.withOpacity(0.4),
-                          AppColors.riceGreen.withOpacity(0.6),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.riceLightGreen,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        status,
-                        style: const TextStyle(
-                          color: AppColors.riceWhite,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.square_foot,
-                        size: 14,
-                        color: AppColors.riceGreen,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        luas,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 14,
-                        color: AppColors.riceOrange,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          lokasi,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textTertiary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return _buildModernActionCard(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      color: color,
+      onTap: () {},
     );
   }
 }
@@ -1678,49 +1558,29 @@ class JadwalTanamModule extends StatelessWidget {
               value: '12 Juli 2026',
               icon: Icons.flag_rounded,
               iconColor: AppColors.riceYellow,
-                ),
-              ],
             ),
+          ],
+        ),
         const SizedBox(height: 24),
         _buildSectionHeading(
           'Akses cepat',
           'Fitur pencatatan dan kalender tetap sama, tampilannya dibuat lebih selaras dengan beranda.',
         ),
         const SizedBox(height: 14),
-        
-        // PANDUAN PERUBAHAN 1: Tambahkan fungsi Navigator.push di sini
         _buildJadwalCard(
           context,
           'Input Tanggal Tanam',
           'Catat tanggal mulai tanam',
           Icons.event_available_rounded,
           AppColors.riceGreen,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const InputJadwalTanamScreen(),
-              ),
-            );
-          },
         ),
         const SizedBox(height: 12),
-        
-        // PANDUAN PERUBAHAN 2: Tambahkan fungsi Navigator.push di sini
         _buildJadwalCard(
           context,
           'Kalender Tanam',
           'Lihat jadwal tanaman',
           Icons.calendar_month_rounded,
           AppColors.riceYellow,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const KalenderTanamScreen(),
-              ),
-            );
-          },
         ),
         const SizedBox(height: 24),
         _buildSectionHeading(
@@ -1763,21 +1623,19 @@ class JadwalTanamModule extends StatelessWidget {
     );
   }
 
-  // PANDUAN PERUBAHAN 3: Perbarui method ini agar menerima parameter onTap
   Widget _buildJadwalCard(
     BuildContext context,
     String title,
     String subtitle,
     IconData icon,
-    Color color, {
-    required VoidCallback onTap,
-  }) {
+    Color color,
+  ) {
     return _buildModernActionCard(
       title: title,
       subtitle: subtitle,
       icon: icon,
       color: color,
-      onTap: onTap, // Sekarang fungsionalitas tap diteruskan dengan benar
+      onTap: () {},
     );
   }
 

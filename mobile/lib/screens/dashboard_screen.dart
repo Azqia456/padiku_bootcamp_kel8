@@ -3,14 +3,21 @@ import '../utils/app_colors.dart';
 import '../utils/routes.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int initialIndex;
+  const DashboardScreen({super.key, this.initialIndex = 0});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   final List<Widget> _screens = [
     const HomeDashboard(),
@@ -32,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: const Color(0xFFF5F7F5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withAlpha(8),
               blurRadius: 18,
               offset: const Offset(0, -6),
             ),
@@ -50,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 border: Border.all(color: Colors.green.shade50),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withAlpha(13),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -94,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     border: Border.all(color: Colors.white, width: 5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF2E7D32).withOpacity(0.28),
+                        color: Color(0xFF2E7D32).withAlpha(71),
                         blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
@@ -150,9 +157,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
+        if (index == 4) {
+          // Navigate to Profil screen
+          Navigator.pushNamed(context, Routes.profil);
+        } else {
+          setState(() {
+            _selectedIndex = index;
+          });
+        }
       },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
@@ -246,7 +258,7 @@ Widget _buildModernTopBanner({
       ),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF2E7D32).withOpacity(0.18),
+          color: Color(0xFF2E7D32).withAlpha(46),
           blurRadius: 22,
           offset: const Offset(0, 10),
         ),
@@ -261,7 +273,7 @@ Widget _buildModernTopBanner({
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.10),
+              color: Colors.white.withAlpha(26),
               shape: BoxShape.circle,
             ),
           ),
@@ -273,7 +285,7 @@ Widget _buildModernTopBanner({
             width: 90,
             height: 90,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withAlpha(20),
               shape: BoxShape.circle,
             ),
           ),
@@ -295,7 +307,7 @@ Widget _buildModernTopBanner({
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.16),
+                            color: Colors.white.withAlpha(41),
                             borderRadius: BorderRadius.circular(99),
                             border: Border.all(color: Colors.white24),
                           ),
@@ -335,7 +347,7 @@ Widget _buildModernTopBanner({
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.14),
+                    color: Colors.white.withAlpha(36),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.white24),
                   ),
@@ -389,7 +401,7 @@ Widget _buildSoftCard({
       border: border ?? Border.all(color: Colors.green.shade50),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withAlpha(13),
           blurRadius: 16,
           offset: const Offset(0, 8),
         ),
@@ -415,7 +427,7 @@ Widget _buildQuickInfoChip({
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.12),
+              color: iconColor.withAlpha(31),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: iconColor, size: 22),
@@ -466,7 +478,7 @@ Widget _buildModernActionCard({
           border: Border.all(color: Colors.green.shade50),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha(13),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -480,7 +492,7 @@ Widget _buildModernActionCard({
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
+                  color: color.withAlpha(36),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Icon(icon, color: color, size: 28),
@@ -550,8 +562,8 @@ Widget _buildModernStatusTile({
         Container(
           width: 48,
           height: 48,
-          decoration: BoxDecoration(
-            color: isActive ? color : color.withOpacity(0.12),
+            decoration: BoxDecoration(
+            color: isActive ? color : color.withAlpha(31),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(icon, color: isActive ? Colors.white : color, size: 24),
@@ -630,7 +642,7 @@ Widget _buildModernPestCard({
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withAlpha(10),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -645,8 +657,8 @@ Widget _buildModernPestCard({
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.riceGreen.withOpacity(0.14)
+                    color: isSelected
+                      ? AppColors.riceGreen.withAlpha(36)
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(16),
                 ),
