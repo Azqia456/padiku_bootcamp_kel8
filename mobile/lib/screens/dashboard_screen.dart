@@ -1495,46 +1495,62 @@ class DataLahanModule extends StatelessWidget {
           'Semua fitur lama tetap tersedia, hanya tampilannya dibuat lebih rapi dan mudah dipindai.',
         ),
         const SizedBox(height: 14),
+        
+        // 1. UPDATE: Tambahkan onTap untuk navigasi ke Tambah Lahan
         _buildLahanCard(
           context,
           'Tambah Lahan',
           'Tambah lahan baru ke dalam sistem',
           Icons.add_circle_outline_rounded,
           AppColors.riceGreen,
+          () {
+            Navigator.pushNamed(context, Routes.tambahLahan);
+          },
         ),
         const SizedBox(height: 12),
+        
+        // 2. UPDATE: Tambahkan onTap untuk navigasi ke Detail Lahan
         _buildLahanCard(
           context,
           'Detail Lahan',
           'Lihat detail informasi lahan',
           Icons.info_outline_rounded,
           AppColors.riceYellow,
+          () {
+            Navigator.pushNamed(context, Routes.detailLahan);
+          },
         ),
         const SizedBox(height: 12),
+        
         _buildLahanCard(
           context,
           'Lokasi Lahan',
           'Lihat lokasi lahan di peta',
           Icons.map_outlined,
           AppColors.riceOrange,
+          () {
+            Navigator.pushNamed(context, Routes.petaSebaranLahan);
+          },
         ),
       ],
     );
   }
 
+  // 3. UPDATE: Tambahkan parameter `VoidCallback onTap` di sini
   Widget _buildLahanCard(
     BuildContext context,
     String title,
     String subtitle,
     IconData icon,
     Color color,
+    VoidCallback onTap, // <--- Parameter baru
   ) {
     return _buildModernActionCard(
       title: title,
       subtitle: subtitle,
       icon: icon,
       color: color,
-      onTap: () {},
+      onTap: onTap, // <--- Gunakan parameter di sini
     );
   }
 }
@@ -1580,6 +1596,9 @@ class JadwalTanamModule extends StatelessWidget {
           'Catat tanggal mulai tanam',
           Icons.event_available_rounded,
           AppColors.riceGreen,
+          () {
+            Navigator.pushNamed(context, Routes.inputJadwalTanam);
+          },
         ),
         const SizedBox(height: 12),
         _buildJadwalCard(
@@ -1588,6 +1607,9 @@ class JadwalTanamModule extends StatelessWidget {
           'Lihat jadwal tanaman',
           Icons.calendar_month_rounded,
           AppColors.riceYellow,
+          () {
+            Navigator.pushNamed(context, Routes.kalenderTanam);
+          },
         ),
         const SizedBox(height: 24),
         _buildSectionHeading(
@@ -1636,13 +1658,14 @@ class JadwalTanamModule extends StatelessWidget {
     String subtitle,
     IconData icon,
     Color color,
+    VoidCallback onTap,
   ) {
     return _buildModernActionCard(
       title: title,
       subtitle: subtitle,
       icon: icon,
       color: color,
-      onTap: () {},
+      onTap: onTap,
     );
   }
 

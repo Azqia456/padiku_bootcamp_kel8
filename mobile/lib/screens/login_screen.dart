@@ -11,17 +11,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   static const _logoAsset = 'assets/images/logo_padi.png';
-  static const _userTypes = <String>[
-    'petani',
-    'kelompok tani',
-    'dinas pertanian',
-  ];
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  String _selectedUserType = _userTypes.first;
   bool _obscurePassword = true;
 
   @override
@@ -119,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.next,
+                        textInputAction: TextInputAction.done,
                         decoration: _inputDecoration(
                           hintText: 'Kata sandi',
                           prefixIcon: Icons.lock_outline,
@@ -142,48 +136,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             return 'Kata sandi tidak boleh kosong';
                           }
                           return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedUserType,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.riceGreen,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        items: _userTypes
-                            .map(
-                              (item) => DropdownMenuItem<String>(
-                                value: item,
-                                child: Text(_capitalizeWords(item)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedUserType = value;
-                            });
-                          }
                         },
                       ),
                       const SizedBox(height: 24),
@@ -211,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.pushNamed(context, Routes.register);
                         },
-                        child: Text(
+                        child: const Text(
                           'Belum punya akun? Daftar',
                           style: TextStyle(
                             color: AppColors.riceGreen,
@@ -228,16 +180,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  String _capitalizeWords(String value) {
-    return value
-        .split(' ')
-        .map(
-          (word) => word.isEmpty
-              ? word
-              : '${word[0].toUpperCase()}${word.substring(1)}',
-        )
-        .join(' ');
   }
 }
