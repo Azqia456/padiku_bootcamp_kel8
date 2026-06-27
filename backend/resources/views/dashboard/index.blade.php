@@ -4,21 +4,37 @@
 @section('title', 'Dashboard Utama')
 
 @section('content')
-{{-- Hero: satu-satunya tempat bg_db.png dipakai --}}
-<section class="relative rounded-2xl overflow-hidden mb-8 shadow-xl min-h-[240px]">
+{{-- Hero: Menggunakan Konsep Gambar Ke-1 dengan Efek Kontras yang Jelas --}}
+<section class="relative rounded-2xl overflow-hidden mb-8 shadow-xl min-h-[260px] flex items-center">
+
     <img src="{{ asset('images/bg_db.png') }}" alt="Sawah Karawang" class="absolute inset-0 w-full h-full object-cover">
-    <div class="hero-overlay absolute inset-0"></div>
-    <div class="relative z-10 p-8 md:p-10 flex items-center gap-6">
+    
+    <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
+    
+    <div class="relative z-10 p-8 md:p-10 flex items-center gap-6 w-full">
+        
         <img src="{{ asset('images/logo_padi.png') }}" alt="PADIKU" class="hidden md:block w-24 h-24 object-contain drop-shadow-lg shrink-0">
-        <div>
-            <span class="inline-block bg-emas-utama/90 text-hijau-utama text-xs font-bold px-3 py-1 rounded-full mb-3">Dinas Pertanian Karawang</span>
-            <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">Kelola Tanam, Panen Lebih Pasti</h1>
-            <p class="text-green-100 text-sm md:text-base max-w-xl mb-5">Platform digital informasi dan koordinasi usaha tani untuk monitoring pertanian Karawang.</p>
+        
+        <div class="w-full">
+  
+        <div class="inline-flex items-center gap-2 bg-white/20 text-[11px] font-bold uppercase tracking-wider text-white px-3.5 py-1.5 rounded-full mb-4 backdrop-blur-md border border-white/20 shadow-sm">
+    <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+    Dinas Pertanian Karawang
+</div>
+            
+            <h1 class="text-2xl md:text-4xl font-extrabold text-white mb-2 leading-tight drop-shadow-md">
+                Kelola Tanam, Panen Lebih Pasti
+            </h1>
+            
+            <p class="text-gray-100 text-sm md:text-base max-w-xl mb-5 drop-shadow">
+                Platform digital informasi dan koordinasi usaha tani untuk monitoring pertanian Karawang.
+            </p>
+            
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('dashboard.map') }}" class="inline-flex items-center gap-2 bg-emas-utama text-hijau-utama font-bold py-2.5 px-5 rounded-xl hover:bg-yellow-300 transition text-sm">
+                <a href="{{ route('dashboard.map') }}" class="inline-flex items-center gap-2 bg-amber-500 text-gray-900 font-bold py-2.5 px-5 rounded-xl hover:bg-amber-600 transition text-sm shadow-md">
                     Lihat Peta Lahan
                 </a>
-                <a href="{{ route('dashboard.farmers') }}" class="inline-flex items-center gap-2 bg-white/20 text-white font-semibold py-2.5 px-5 rounded-xl hover:bg-white/30 transition text-sm border border-white/30">
+                <a href="{{ route('dashboard.farmers') }}" class="inline-flex items-center gap-2 bg-white/20 text-white font-semibold py-2.5 px-5 rounded-xl hover:bg-white/30 transition text-sm border border-white/30 backdrop-blur-sm">
                     Manajemen Petani
                 </a>
             </div>
