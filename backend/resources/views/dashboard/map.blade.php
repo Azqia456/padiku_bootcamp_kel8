@@ -4,182 +4,146 @@
 @section('title', 'Monitoring Lahan')
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    #plantingMap {
-        height: 600px;
+    .map-wrapper {
+        position: relative;
         width: 100%;
-        border: 2px solid #333;
-        background: #f5f5f5;
-    }
-    .map-container {
-        position: relative;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        height: 500px;
+        background: #f0f0f0;
+        border-radius: 12px;
         overflow: hidden;
+        cursor: grab;
+        user-select: none;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
     }
-    .map-title {
+    .map-wrapper:active {
+        cursor: grabbing;
+    }
+    .map-image-inner {
         position: absolute;
-        top: 30px;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        transform-origin: 0 0;
+        will-change: transform;
+    }
+    .map-image-inner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+        -webkit-user-drag: none;
+    }
+    .map-controls {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 10;
+    }
+    .map-btn {
+        width: 36px;
+        height: 36px;
+        background: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+        line-height: 1;
+    }
+    .map-btn:hover { background: #f5f5f5; }
+    .map-hint {
+        position: absolute;
+        bottom: 16px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(255,255,255,0.98);
-        padding: 12px 24px;
-        border: 2px solid #333;
-        border-radius: 4px;
-        font-size: 16px;
-        font-weight: bold;
-        color: #333;
-        z-index: 1001;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        pointer-events: none;
-    }
-    .map-subtitle {
-        font-size: 12px;
-        font-weight: normal;
-        color: #666;
-        margin-top: 4px;
-    }
-    .legend-box {
-        position: absolute;
-        top: 30px;
-        left: 30px;
-        background: rgba(255,255,255,0.98);
-        padding: 15px;
-        border: 2px solid #333;
-        border-radius: 4px;
-        z-index: 1001;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        max-width: 280px;
-        pointer-events: none;
-    }
-    .legend-title {
-        font-weight: bold;
-        font-size: 12px;
-        margin-bottom: 10px;
-        color: #333;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 5px;
-    }
-    .legend-matrix {
-        display: grid;
-        grid-template-columns: 80px 1fr;
-        gap: 8px;
+        background: rgba(255,255,255,0.9);
+        border-radius: 8px;
+        padding: 6px 12px;
         font-size: 11px;
-    }
-    .legend-row {
-        display: contents;
-    }
-    .legend-label {
-        color: #333;
-        font-weight: 500;
-    }
-    .legend-colors {
+        color: #555;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        z-index: 10;
         display: flex;
-        gap: 4px;
+        align-items: center;
+        gap: 6px;
+        pointer-events: none;
     }
-    .legend-color {
-        width: 20px;
-        height: 20px;
+    .map-hud-title {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(255,255,255,0.98);
+        border: 2px solid #333;
+        border-radius: 4px;
+        padding: 10px 16px;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        pointer-events: none;
+    }
+    .map-hud-title h3 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .map-hud-title p {
+        margin: 2px 0 0 0;
+        font-size: 11px;
+        color: #666;
+        text-transform: uppercase;
+    }
+    .map-hud-legend {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        background: rgba(255,255,255,0.98);
+        border: 2px solid #333;
+        border-radius: 4px;
+        padding: 12px 14px;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        width: 160px;
+    }
+    .map-hud-legend-title {
+        font-size: 11px;
+        font-weight: 800;
+        color: #333;
+        text-transform: uppercase;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+        letter-spacing: 0.3px;
+    }
+    .map-hud-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #444;
+    }
+    .map-hud-legend-item:last-child {
+        margin-bottom: 0;
+    }
+    .map-hud-color-box {
+        width: 14px;
+        height: 14px;
         border: 1px solid #333;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        font-weight: bold;
-        color: #333;
-    }
-    .scale-bar {
-        position: absolute;
-        bottom: 30px;
-        right: 30px;
-        background: rgba(255,255,255,0.98);
-        padding: 8px 12px;
-        border: 2px solid #333;
-        border-radius: 4px;
-        z-index: 1001;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        pointer-events: none;
-    }
-    .scale-line {
-        height: 3px;
-        background: #333;
-        margin: 5px 0;
-    }
-    .scale-text {
-        font-size: 10px;
-        color: #333;
-        text-align: center;
-    }
-    .compass {
-        position: absolute;
-        bottom: 30px;
-        left: 30px;
-        width: 60px;
-        height: 60px;
-        background: rgba(255,255,255,0.98);
-        border: 2px solid #333;
-        border-radius: 50%;
-        z-index: 1001;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-    }
-    .compass-inner {
-        width: 40px;
-        height: 40px;
-        position: relative;
-    }
-    .compass-n {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 14px;
-        font-weight: bold;
-        color: #d32f2f;
-    }
-    .compass-s {
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
-    }
-    .compass-e {
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
-    }
-    .compass-w {
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
-    }
-    .leaflet-popup-content-wrapper {
-        border-radius: 4px;
-        box-shadow: 0 3px 14px rgba(0,0,0,0.4);
-    }
-    .leaflet-popup-content {
-        font-size: 12px;
-        line-height: 1.4;
-    }
-    .leaflet-container {
-        font-family: 'Arial', sans-serif;
+        border-radius: 2px;
     }
 </style>
 @endpush
@@ -193,56 +157,48 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
     <div class="lg:col-span-3">
-        <div class="map-container">
-            <div class="map-title">
-                PETA FASE PERTANIAN
-                <div class="map-subtitle">KABUPATEN KARAWANG</div>
-            </div>
-            <div class="legend-box">
-                <div class="legend-title">Fase Pertanian</div>
-                <div class="legend-matrix">
-                    <div class="legend-row">
-                        <div class="legend-label">Baru Tanam</div>
-                        <div class="legend-colors">
-                            <div class="legend-color" style="background: #90EE90;">A1</div>
-                        </div>
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h2 class="font-bold text-hijau-utama mb-3 text-sm">Peta Fase Pertanian — Kabupaten Karawang</h2>
+            <div class="map-wrapper" id="mapWrapper">
+                <!-- Floating Title Card -->
+                <div class="map-hud-title">
+                    <h3>Peta Fase Pertanian</h3>
+                    <p>Kabupaten Karawang</p>
+                </div>
+
+                <!-- Floating Legend Card -->
+                <div class="map-hud-legend">
+                    <div class="map-hud-legend-title">Fase Pertanian</div>
+                    <div class="map-hud-legend-item">
+                        <div class="map-hud-color-box" style="background: #90EE90;"></div>
+                        <span>Baru Tanam</span>
                     </div>
-                    <div class="legend-row">
-                        <div class="legend-label">Pertumbuhan</div>
-                        <div class="legend-colors">
-                            <div class="legend-color" style="background: #32CD32;">A2</div>
-                            <div class="legend-color" style="background: #228B22;">A3</div>
-                        </div>
+                    <div class="map-hud-legend-item">
+                        <div class="map-hud-color-box" style="background: #32CD32;"></div>
+                        <span>Pertumbuhan</span>
                     </div>
-                    <div class="legend-row">
-                        <div class="legend-label">Siap Panen</div>
-                        <div class="legend-colors">
-                            <div class="legend-color" style="background: #FFD700;">B1</div>
-                            <div class="legend-color" style="background: #FFA500;">B2</div>
-                        </div>
+                    <div class="map-hud-legend-item">
+                        <div class="map-hud-color-box" style="background: #FFA500;"></div>
+                        <span>Siap Panen</span>
                     </div>
-                    <div class="legend-row">
-                        <div class="legend-label">Selesai Panen</div>
-                        <div class="legend-colors">
-                            <div class="legend-color" style="background: #8B4513;">C1</div>
-                            <div class="legend-color" style="background: #A0522D;">C2</div>
-                        </div>
+                    <div class="map-hud-legend-item">
+                        <div class="map-hud-color-box" style="background: #8B4513;"></div>
+                        <span>Selesai Panen</span>
                     </div>
                 </div>
-            </div>
-            <div class="compass">
-                <div class="compass-inner">
-                    <div class="compass-n">N</div>
-                    <div class="compass-s">S</div>
-                    <div class="compass-e">E</div>
-                    <div class="compass-w">W</div>
+
+                <div class="map-image-inner" id="mapInner">
+                    <img src="{{ asset('images/peta_fase_pertanian.jpg') }}" alt="Peta Fase Pertanian Kabupaten Karawang" draggable="false">
+                </div>
+                <div class="map-controls">
+                    <button class="map-btn" id="zoomIn" title="Zoom In">+</button>
+                    <button class="map-btn" id="zoomOut" title="Zoom Out">−</button>
+                    <button class="map-btn" id="zoomReset" title="Reset" style="font-size:14px;">⌂</button>
+                </div>
+                <div class="map-hint">
+                    🖱️ Scroll / drag untuk navigasi
                 </div>
             </div>
-            <div class="scale-bar">
-                <div class="scale-line" style="width: 100px;"></div>
-                <div class="scale-text">10 km</div>
-            </div>
-            <div id="plantingMap"></div>
         </div>
     </div>
 
@@ -309,148 +265,123 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Karawang district boundaries (more complex polygon shapes)
-    const karawangDistricts = {
-        "Karawang Barat": [[-6.32, 107.28], [-6.30, 107.30], [-6.30, 107.32], [-6.32, 107.34], [-6.35, 107.34], [-6.38, 107.32], [-6.38, 107.28], [-6.35, 107.26]],
-        "Karawang Timur": [[-6.32, 107.34], [-6.30, 107.36], [-6.30, 107.40], [-6.32, 107.42], [-6.35, 107.42], [-6.38, 107.40], [-6.38, 107.34], [-6.35, 107.34]],
-        "Telukjambe Barat": [[-6.28, 107.28], [-6.26, 107.30], [-6.26, 107.32], [-6.28, 107.34], [-6.32, 107.34], [-6.32, 107.28], [-6.30, 107.26]],
-        "Telukjambe Timur": [[-6.28, 107.34], [-6.26, 107.36], [-6.26, 107.40], [-6.28, 107.42], [-6.32, 107.42], [-6.32, 107.34], [-6.30, 107.34]],
-        "Kotabaru": [[-6.24, 107.28], [-6.22, 107.30], [-6.22, 107.32], [-6.24, 107.34], [-6.28, 107.34], [-6.28, 107.28], [-6.26, 107.26]],
-        "Klari": [[-6.24, 107.34], [-6.22, 107.36], [-6.22, 107.40], [-6.24, 107.42], [-6.28, 107.42], [-6.28, 107.34], [-6.26, 107.34]],
-        "Cikampek": [[-6.38, 107.42], [-6.36, 107.44], [-6.36, 107.46], [-6.38, 107.48], [-6.44, 107.48], [-6.44, 107.42], [-6.42, 107.40]],
-        "Purwasari": [[-6.44, 107.34], [-6.42, 107.36], [-6.42, 107.40], [-6.44, 107.42], [-6.48, 107.42], [-6.48, 107.34], [-6.46, 107.32]],
-        "Cilamaya Wetan": [[-6.18, 107.28], [-6.16, 107.30], [-6.16, 107.32], [-6.18, 107.34], [-6.24, 107.34], [-6.24, 107.28], [-6.22, 107.26]],
-        "Cilamaya Kulon": [[-6.18, 107.34], [-6.16, 107.36], [-6.16, 107.40], [-6.18, 107.42], [-6.24, 107.42], [-6.24, 107.34], [-6.22, 107.34]],
-        "Tempuran": [[-6.14, 107.28], [-6.12, 107.30], [-6.12, 107.32], [-6.14, 107.34], [-6.18, 107.34], [-6.18, 107.28], [-6.16, 107.26]],
-        "Jayakerta": [[-6.14, 107.34], [-6.12, 107.36], [-6.12, 107.40], [-6.14, 107.42], [-6.18, 107.42], [-6.18, 107.34], [-6.16, 107.34]],
-        "Pedes": [[-6.10, 107.28], [-6.08, 107.30], [-6.08, 107.32], [-6.10, 107.34], [-6.14, 107.34], [-6.14, 107.28], [-6.12, 107.26]],
-        "Tirtajaya": [[-6.10, 107.34], [-6.08, 107.36], [-6.08, 107.40], [-6.10, 107.42], [-6.14, 107.42], [-6.14, 107.34], [-6.12, 107.34]],
-        "Rawamerta": [[-6.44, 107.28], [-6.42, 107.30], [-6.42, 107.32], [-6.44, 107.34], [-6.48, 107.34], [-6.48, 107.28], [-6.46, 107.26]],
-        "Tegalwaru": [[-6.48, 107.28], [-6.46, 107.30], [-6.46, 107.32], [-6.48, 107.34], [-6.52, 107.34], [-6.52, 107.28], [-6.50, 107.26]],
-        "Majalaya": [[-6.48, 107.34], [-6.46, 107.36], [-6.46, 107.40], [-6.48, 107.42], [-6.52, 107.42], [-6.52, 107.34], [-6.50, 107.34]],
-        "Banyusari": [[-6.52, 107.28], [-6.50, 107.30], [-6.50, 107.32], [-6.52, 107.34], [-6.56, 107.34], [-6.56, 107.28], [-6.54, 107.26]],
-        "Jatisari": [[-6.52, 107.34], [-6.50, 107.36], [-6.50, 107.40], [-6.52, 107.42], [-6.56, 107.42], [-6.56, 107.34], [-6.54, 107.34]],
-        "Ciampel": [[-6.38, 107.28], [-6.36, 107.30], [-6.36, 107.32], [-6.38, 107.34], [-6.44, 107.34], [-6.44, 107.28], [-6.42, 107.26]]
-    };
+    (function() {
+        const wrapper = document.getElementById('mapWrapper');
+        const inner   = document.getElementById('mapInner');
 
-    // Planting data from server
-    const plantingData = @json($plantingData);
+        let scale = 1, minScale = 1, maxScale = 5;
+        let panX = 0, panY = 0;
+        let isPanning = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
 
-    // Initialize map
-    const map = L.map('plantingMap').setView([-6.35, 107.35], 10);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Function to get color based on phase with matrix colors
-    function getColor(phase) {
-        if (phase === 'planted') return '#90EE90'; // Light Green - Baru Tanam (A1)
-        if (phase === 'growing') return '#32CD32'; // Lime Green - Masa Pertumbuhan (A2)
-        if (phase === 'ready') return '#FFD700'; // Gold - Siap Panen (B1)
-        return '#8B4513'; // Saddle Brown - Selesai Panen (C1)
-    }
-
-    // Function to style each district with professional cartography style
-    function style(feature) {
-        const districtData = plantingData.find(d => d.district === feature.properties.name);
-        const phase = districtData ? districtData.dominant_phase : 'planted';
-        
-        return {
-            fillColor: getColor(phase),
-            weight: 2,
-            opacity: 1,
-            color: '#333',
-            dashArray: '',
-            fillOpacity: 0.8
-        };
-    }
-
-    // Function to highlight feature
-    function highlightFeature(e) {
-        const layer = e.target;
-        layer.setStyle({
-            weight: 4,
-            color: '#000',
-            dashArray: '',
-            fillOpacity: 1
-        });
-        layer.bringToFront();
-    }
-
-    // Function to reset highlight
-    function resetHighlight(e) {
-        geojson.resetStyle(e.target);
-    }
-
-    // Function to show popup
-    function onEachFeature(feature, layer) {
-        const districtData = plantingData.find(d => d.district === feature.properties.name);
-        
-        if (districtData) {
-            const popupContent = `
-                <div style="min-width: 220px;">
-                    <h3 style="font-weight: bold; margin-bottom: 8px; color: #0A5C34;">${districtData.district}</h3>
-                    <div style="margin-bottom: 6px;">
-                        <strong>Komoditas:</strong> ${districtData.common_variety ? districtData.common_variety.rice_variety : '-'}
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong>Fase:</strong> 
-                        <span style="color: ${getColor(districtData.dominant_phase)}; font-weight: bold;">
-                            ${districtData.phase_label}
-                        </span>
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong>Tanggal Tanam:</strong> ${districtData.first_planting ? new Date(districtData.first_planting).toLocaleDateString('id-ID') : '-'}
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong>Perkiraan Panen:</strong> ${districtData.last_harvest ? new Date(districtData.last_harvest).toLocaleDateString('id-ID') : '-'}
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong>Umur Tanaman:</strong> ${districtData.avg_age_days} hari (${districtData.avg_age_months} bulan)
-                    </div>
-                    <div style="margin-bottom: 6px;">
-                        <strong>Luas Lahan:</strong> ${districtData.total_area.toFixed(2)} Ha
-                    </div>
-                    <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 6px; font-size: 12px;">
-                        <strong>Estimasi Hasil Panen:</strong> ${districtData.estimated_yield.toFixed(0)} ton
-                    </div>
-                </div>
-            `;
-            layer.bindPopup(popupContent);
-        } else {
-            layer.bindPopup(`<strong>${feature.properties.name}</strong><br/>Belum ada data tanam`);
+        function clampPan(x, y, s) {
+            const ww = wrapper.clientWidth,  wh = wrapper.clientHeight;
+            const iw = ww * s,               ih = wh * s;
+            const minX = Math.min(0, ww - iw);
+            const minY = Math.min(0, wh - ih);
+            return {
+                x: Math.min(0, Math.max(x, minX)),
+                y: Math.min(0, Math.max(y, minY))
+            };
         }
 
-        layer.on({
-            mouseover: highlightFeature,
-            mouseout: resetHighlight,
-            click: function(e) {
-                layer.openPopup();
+        function applyTransform() {
+            inner.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        }
+
+        // Scroll to zoom
+        wrapper.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 1.12 : 0.88;
+            const newScale = Math.min(maxScale, Math.max(minScale, scale * delta));
+
+            // Zoom toward cursor position
+            const rect = wrapper.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            panX = mx - (mx - panX) * (newScale / scale);
+            panY = my - (my - panY) * (newScale / scale);
+            scale = newScale;
+
+            const clamped = clampPan(panX, panY, scale);
+            panX = clamped.x; panY = clamped.y;
+            applyTransform();
+        }, { passive: false });
+
+        // Drag to pan
+        wrapper.addEventListener('mousedown', function(e) {
+            isPanning = true;
+            startX = e.clientX; startY = e.clientY;
+            startPanX = panX; startPanY = panY;
+            wrapper.style.cursor = 'grabbing';
+        });
+        window.addEventListener('mousemove', function(e) {
+            if (!isPanning) return;
+            const dx = e.clientX - startX, dy = e.clientY - startY;
+            const clamped = clampPan(startPanX + dx, startPanY + dy, scale);
+            panX = clamped.x; panY = clamped.y;
+            applyTransform();
+        });
+        window.addEventListener('mouseup', function() {
+            isPanning = false;
+            wrapper.style.cursor = 'grab';
+        });
+
+        // Touch pan & pinch zoom
+        let lastTouchDist = null;
+        wrapper.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1) {
+                isPanning = true;
+                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                startPanX = panX; startPanY = panY;
             }
+        }, { passive: true });
+        wrapper.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (lastTouchDist !== null) {
+                    const delta = dist / lastTouchDist;
+                    scale = Math.min(maxScale, Math.max(minScale, scale * delta));
+                    const clamped = clampPan(panX, panY, scale);
+                    panX = clamped.x; panY = clamped.y;
+                    applyTransform();
+                }
+                lastTouchDist = dist;
+            } else if (e.touches.length === 1 && isPanning) {
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                const clamped = clampPan(startPanX + dx, startPanY + dy, scale);
+                panX = clamped.x; panY = clamped.y;
+                applyTransform();
+            }
+        }, { passive: false });
+        wrapper.addEventListener('touchend', function() {
+            isPanning = false;
+            lastTouchDist = null;
         });
-    }
 
-    // Create GeoJSON features
-    const geojsonFeatures = Object.keys(karawangDistricts).map(districtName => ({
-        type: 'Feature',
-        properties: { name: districtName },
-        geometry: {
-            type: 'Polygon',
-            coordinates: [[
-                ...karawangDistricts[districtName].map(coord => [coord[1], coord[0]])
-            ]]
-        }
-    }));
+        // Buttons
+        document.getElementById('zoomIn').addEventListener('click', function() {
+            scale = Math.min(maxScale, scale * 1.25);
+            const clamped = clampPan(panX, panY, scale);
+            panX = clamped.x; panY = clamped.y;
+            applyTransform();
+        });
+        document.getElementById('zoomOut').addEventListener('click', function() {
+            scale = Math.max(minScale, scale / 1.25);
+            const clamped = clampPan(panX, panY, scale);
+            panX = clamped.x; panY = clamped.y;
+            applyTransform();
+        });
+        document.getElementById('zoomReset').addEventListener('click', function() {
+            scale = 1; panX = 0; panY = 0;
+            applyTransform();
+        });
 
-    // Add GeoJSON layer to map
-    const geojson = L.geoJSON(geojsonFeatures, {
-        style: style,
-        onEachFeature: onEachFeature
-    }).addTo(map);
-
-    // Remove default legend since we have custom legend box
+        applyTransform();
+    })();
 </script>
 @endpush
