@@ -13,8 +13,6 @@
     
     <div class="relative z-10 p-8 md:p-10 flex items-center gap-6 w-full">
         
-        <img src="{{ asset('images/logo_padi.png') }}" alt="PADIKU" class="hidden md:block w-24 h-24 object-contain drop-shadow-lg shrink-0">
-        
         <div class="w-full">
   
         <div class="inline-flex items-center gap-2 bg-white/20 text-[11px] font-bold uppercase tracking-wider text-white px-3.5 py-1.5 rounded-full mb-4 backdrop-blur-md border border-white/20 shadow-sm">
