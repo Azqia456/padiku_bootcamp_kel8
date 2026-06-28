@@ -4,148 +4,42 @@
 @section('title', 'Monitoring Hama')
 
 @push('styles')
-<style>
-    .map-wrapper {
-        position: relative;
-        width: 100%;
-        height: 500px;
-        background: #f0f0f0;
-        border-radius: 12px;
-        overflow: hidden;
-        cursor: grab;
-        user-select: none;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    }
-    .map-wrapper:active {
-        cursor: grabbing;
-    }
-    .map-image-inner {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%;
-        height: 100%;
-        transform-origin: 0 0;
-        will-change: transform;
-    }
-    .map-image-inner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        pointer-events: none;
-        -webkit-user-drag: none;
-    }
-    .map-controls {
-        position: absolute;
-        bottom: 16px;
-        right: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        z-index: 10;
-    }
-    .map-btn {
-        width: 36px;
-        height: 36px;
-        background: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 20px;
-        font-weight: bold;
-        color: #333;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s;
-        line-height: 1;
-    }
-    .map-btn:hover { background: #f5f5f5; }
-    .map-hint {
-        position: absolute;
-        bottom: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(255,255,255,0.9);
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-size: 11px;
-        color: #555;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        pointer-events: none;
-    }
-    .map-hud-title {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        background: rgba(255,255,255,0.98);
-        border: 2px solid #333;
-        border-radius: 4px;
-        padding: 10px 16px;
-        z-index: 10;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-        pointer-events: none;
-    }
-    .map-hud-title h3 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 800;
-        color: #333;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .map-hud-title p {
-        margin: 2px 0 0 0;
-        font-size: 11px;
-        color: #666;
-        text-transform: uppercase;
-    }
-    .map-hud-legend {
-        position: absolute;
-        bottom: 16px;
-        left: 16px;
-        background: rgba(255,255,255,0.98);
-        border: 2px solid #333;
-        border-radius: 4px;
-        padding: 12px 14px;
-        z-index: 10;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-        width: 160px;
-    }
-    .map-hud-legend-title {
-        font-size: 11px;
-        font-weight: 800;
-        color: #333;
-        text-transform: uppercase;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 4px;
-        margin-bottom: 8px;
-        letter-spacing: 0.3px;
-    }
-    .map-hud-legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 6px;
-        font-size: 11px;
-        font-weight: 600;
-        color: #444;
-    }
-    .map-hud-legend-item:last-child {
-        margin-bottom: 0;
-    }
-    .map-hud-color-box {
-        width: 14px;
-        height: 14px;
-        border: 1px solid #333;
-        border-radius: 2px;
-    }
-</style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .legend {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            line-height: 24px;
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 13px;
+        }
+        .legend h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: #111;
+        }
+        .legend i {
+            width: 16px;
+            height: 16px;
+            float: left;
+            margin-right: 10px;
+            margin-top: 4px;
+            opacity: 0.85;
+            border-radius: 3px;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -174,45 +68,8 @@
     <div class="lg:col-span-3">
         <div class="bg-white rounded-xl shadow-sm p-4">
             <h2 class="font-bold text-hijau-utama mb-3 text-sm">Peta Sebaran Hama — Kabupaten Karawang</h2>
-            <div class="map-wrapper" id="mapWrapper">
-                <!-- Floating Title Card -->
-                <div class="map-hud-title">
-                    <h3>Peta Sebaran Hama</h3>
-                    <p>Kabupaten Karawang</p>
-                </div>
-
-                <!-- Floating Legend Card -->
-                <div class="map-hud-legend">
-                    <div class="map-hud-legend-title">Tingkat Serangan</div>
-                    <div class="map-hud-legend-item">
-                        <div class="map-hud-color-box" style="background: #6BB86B;"></div>
-                        <span>Aman</span>
-                    </div>
-                    <div class="map-hud-legend-item">
-                        <div class="map-hud-color-box" style="background: #F5C842;"></div>
-                        <span>Waspada</span>
-                    </div>
-                    <div class="map-hud-legend-item">
-                        <div class="map-hud-color-box" style="background: #E8883A;"></div>
-                        <span>Tinggi</span>
-                    </div>
-                    <div class="map-hud-legend-item">
-                        <div class="map-hud-color-box" style="background: #D63B2F;"></div>
-                        <span>Sangat Tinggi</span>
-                    </div>
-                </div>
-
-                <div class="map-image-inner" id="mapInner">
-                    <img src="{{ asset('images/peta_sebaran_hama.jpg') }}" alt="Peta Sebaran Hama Kabupaten Karawang" draggable="false">
-                </div>
-                <div class="map-controls">
-                    <button class="map-btn" id="zoomIn" title="Zoom In">+</button>
-                    <button class="map-btn" id="zoomOut" title="Zoom Out">−</button>
-                    <button class="map-btn" id="zoomReset" title="Reset" style="font-size:14px;">⌂</button>
-                </div>
-                <div class="map-hint">
-                    🖱️ Scroll / drag untuk navigasi
-                </div>
+            <div class="map-wrapper" id="mapWrapper" style="cursor: default;">
+                <div id="map" style="width: 100%; height: 100%; z-index: 1;"></div>
             </div>
         </div>
     </div>
@@ -333,124 +190,76 @@
 @endsection
 
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    (function() {
-        const wrapper = document.getElementById('mapWrapper');
-        const inner   = document.getElementById('mapInner');
+    document.addEventListener("DOMContentLoaded", function() {
+        const map = L.map('map').setView([-6.3224, 107.3376], 10);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
 
-        let scale = 1, minScale = 1, maxScale = 5;
-        let panX = 0, panY = 0;
-        let isPanning = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
-
-        function clampPan(x, y, s) {
-            const ww = wrapper.clientWidth,  wh = wrapper.clientHeight;
-            const iw = ww * s,               ih = wh * s;
-            const minX = Math.min(0, ww - iw);
-            const minY = Math.min(0, wh - ih);
-            return {
-                x: Math.min(0, Math.max(x, minX)),
-                y: Math.min(0, Math.max(y, minY))
-            };
+        function dapatkanWarnaRandom() {
+            const status = [
+                { color: '#D11141', name: 'Sangat Tinggi' },
+                { color: '#FFC425', name: 'Tinggi' },
+                { color: '#F37735', name: 'Waspada' },
+                { color: '#00B159', name: 'Aman' }
+            ];
+            return status[Math.floor(Math.random() * status.length)];
         }
 
-        function applyTransform() {
-            inner.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-        }
-
-        // Scroll to zoom
-        wrapper.addEventListener('wheel', function(e) {
-            e.preventDefault();
-            const delta = e.deltaY < 0 ? 1.12 : 0.88;
-            const newScale = Math.min(maxScale, Math.max(minScale, scale * delta));
-
-            // Zoom toward cursor position
-            const rect = wrapper.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
-            panX = mx - (mx - panX) * (newScale / scale);
-            panY = my - (my - panY) * (newScale / scale);
-            scale = newScale;
-
-            const clamped = clampPan(panX, panY, scale);
-            panX = clamped.x; panY = clamped.y;
-            applyTransform();
-        }, { passive: false });
-
-        // Drag to pan
-        wrapper.addEventListener('mousedown', function(e) {
-            isPanning = true;
-            startX = e.clientX; startY = e.clientY;
-            startPanX = panX; startPanY = panY;
-            wrapper.style.cursor = 'grabbing';
-        });
-        window.addEventListener('mousemove', function(e) {
-            if (!isPanning) return;
-            const dx = e.clientX - startX, dy = e.clientY - startY;
-            const clamped = clampPan(startPanX + dx, startPanY + dy, scale);
-            panX = clamped.x; panY = clamped.y;
-            applyTransform();
-        });
-        window.addEventListener('mouseup', function() {
-            isPanning = false;
-            wrapper.style.cursor = 'grab';
-        });
-
-        // Touch pan & pinch zoom
-        let lastTouchDist = null;
-        wrapper.addEventListener('touchstart', function(e) {
-            if (e.touches.length === 1) {
-                isPanning = true;
-                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-                startPanX = panX; startPanY = panY;
-            }
-        }, { passive: true });
-        wrapper.addEventListener('touchmove', function(e) {
-            if (e.touches.length === 2) {
-                e.preventDefault();
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (lastTouchDist !== null) {
-                    const delta = dist / lastTouchDist;
-                    scale = Math.min(maxScale, Math.max(minScale, scale * delta));
-                    const clamped = clampPan(panX, panY, scale);
-                    panX = clamped.x; panY = clamped.y;
-                    applyTransform();
+        // Memuat file GeoJSON
+        fetch("{{ asset('geojson/karawang-desa.json') }}")
+            .then(res => res.json())
+            .then(function(geojson) {
+            L.geoJSON(geojson, {
+                style: function(feature) {
+                    const status = dapatkanWarnaRandom();
+                    feature.properties.statusHama = status.name;
+                    feature.properties.warnaHama = status.color;
+                    
+                    return {
+                        fillColor: status.color,
+                        weight: 1,
+                        opacity: 1,
+                        color: 'white',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    const namaDesa = feature.properties.NAMOBJ || feature.properties.DESA || feature.properties.NAME_4 || 'Desa';
+                    const kecamatan = feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.NAME_3 || 'Kecamatan';
+                    
+                    layer.bindPopup(
+                        `<div style="font-size: 13px;">` +
+                        `<b style="color: #333; font-size: 14px;">${namaDesa}</b><br>` +
+                        `<span style="color: #666;">Kec. ${kecamatan}</span><hr style="margin: 5px 0;">` +
+                        `<b>Status Hama:</b> <span style="color: ${feature.properties.warnaHama}; font-weight: bold;">${feature.properties.statusHama}</span>` +
+                        `</div>`
+                    );
                 }
-                lastTouchDist = dist;
-            } else if (e.touches.length === 1 && isPanning) {
-                const dx = e.touches[0].clientX - startX;
-                const dy = e.touches[0].clientY - startY;
-                const clamped = clampPan(startPanX + dx, startPanY + dy, scale);
-                panX = clamped.x; panY = clamped.y;
-                applyTransform();
-            }
-        }, { passive: false });
-        wrapper.addEventListener('touchend', function() {
-            isPanning = false;
-            lastTouchDist = null;
+            }).addTo(map);
+        }).catch(function(error) {
+            console.error("Gagal memuat GeoJSON:", error);
+            document.getElementById('map').innerHTML = "<div style='padding: 20px; text-align: center; color: red;'>Gagal memuat data peta (pastikan karawang-desa.json ada di public/geojson/)</div>";
         });
 
-        // Buttons
-        document.getElementById('zoomIn').addEventListener('click', function() {
-            scale = Math.min(maxScale, scale * 1.25);
-            const clamped = clampPan(panX, panY, scale);
-            panX = clamped.x; panY = clamped.y;
-            applyTransform();
-        });
-        document.getElementById('zoomOut').addEventListener('click', function() {
-            scale = Math.max(minScale, scale / 1.25);
-            const clamped = clampPan(panX, panY, scale);
-            panX = clamped.x; panY = clamped.y;
-            applyTransform();
-        });
-        document.getElementById('zoomReset').addEventListener('click', function() {
-            scale = 1; panX = 0; panY = 0;
-            applyTransform();
-        });
-
-        applyTransform();
-    })();
+        // Kontrol Legenda Peta
+        const legend = L.control({position: 'bottomleft'});
+        legend.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML += '<h4>Tingkat Serangan Hama</h4>';
+            div.innerHTML += '<i style="background: #00B159"></i> Aman<br>';
+            div.innerHTML += '<i style="background: #F37735"></i> Waspada<br>';
+            div.innerHTML += '<i style="background: #FFC425"></i> Tinggi<br>';
+            div.innerHTML += '<i style="background: #D11141"></i> Sangat Tinggi<br>';
+            return div;
+        };
+        legend.addTo(map);
+    });
 </script>
 @endpush
 
