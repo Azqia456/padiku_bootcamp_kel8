@@ -36,6 +36,25 @@ class DashboardController extends Controller
         $productionByStatus = Planting::selectRaw('status, COUNT(*) as count, SUM(area_hectares) as total_area')
             ->groupBy('status')
             ->get();
+
+        // Get monthly production data for chart (last 6 months)
+        $monthlyProduction = Planting::selectRaw('YEAR(planting_date) as year, MONTH(planting_date) as month, SUM(area_hectares) as total_area')
+            ->whereNotNull('planting_date')
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->take(6)
+            ->get();
+
+        // Get recent farmer registrations (last 5)
+        $recentFarmers = User::where('user_type', 'petani')
+            ->withCount('plantings')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get total fertilizer distribution schedules
+        $totalFertilizer = FertilizerSchedule::count();
         
         return view('dashboard.index', compact(
             'totalPlantings',
@@ -45,8 +64,80 @@ class DashboardController extends Controller
             'totalFarmers',
             'plantingsByDistrict',
             'recentPestReports',
-            'productionByStatus'
+            'productionByStatus',
+            'monthlyProduction',
+            'recentFarmers',
+            'totalFertilizer'
         ));
+    }
+
+    public function storeFarmer(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'nullable|string|max:20',
+            'district' => 'required|string|max:100',
+            'address' => 'nullable|string',
+            'password' => 'required|string|min:8',
+        ]);
+
+        $validated['user_type'] = 'petani';
+        $validated['password'] = bcrypt($validated['password']);
+
+        User::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Petani berhasil didaftarkan!',
+        ]);
+    }
+
+    public function storePlanting(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'location_name' => 'required|string|max:255',
+            'area_hectares' => 'required|numeric|min:0.01',
+            'planting_date' => 'required|date',
+            'rice_variety' => 'required|string|max:100',
+            'expected_harvest_date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $validated['status'] = 'planted';
+        $validated['latitude'] = $request->latitude ?? -6.3024; // Default Karawang
+        $validated['longitude'] = $request->longitude ?? 107.3053;
+
+        Planting::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data lahan tanam berhasil ditambahkan!',
+        ]);
+    }
+
+    public function storePestReport(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'planting_id' => 'required|exists:plantings,id',
+            'pest_type' => 'required|string|max:100',
+            'severity' => 'required|in:low,medium,high,critical',
+            'description' => 'required|string',
+            'report_date' => 'required|date',
+        ]);
+
+        $validated['status'] = 'active';
+        $validated['latitude'] = $request->latitude ?? -6.3024;
+        $validated['longitude'] = $request->longitude ?? 107.3053;
+
+        PestReport::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan serangan hama berhasil dikirim!',
+        ]);
     }
     
     public function map()

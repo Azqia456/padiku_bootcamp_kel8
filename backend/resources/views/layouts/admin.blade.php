@@ -10,13 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --hijau-utama: #0A5C34;
-            --hijau-sekunder: #2E7D32;
-            --hijau-muda: #63A52F;
-            --emas-utama: #F2C230;
-            --emas-terang: #FFD54F;
+            --hijau-utama: #166534;
+            --hijau-sekunder: #15803d;
+            --hijau-muda: #22c55e;
+            --emas-utama: #FACC15;
+            --emas-terang: #FEF08A;
+            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
         }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #F8FAFC; 
+        }
         .bg-hijau-utama { background-color: var(--hijau-utama); }
         .bg-hijau-sekunder { background-color: var(--hijau-sekunder); }
         .bg-hijau-muda { background-color: var(--hijau-muda); }
@@ -24,15 +28,37 @@
         .text-hijau-utama { color: var(--hijau-utama); }
         .text-emas-utama { color: var(--emas-utama); }
         .border-hijau-utama { border-color: var(--hijau-utama); }
-        .sidebar-link.active { background-color: rgba(242, 194, 48, 0.18); border-left: 4px solid var(--emas-utama); }
-        .sidebar-link:hover:not(.active) { background-color: rgba(255, 255, 255, 0.08); }
-        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(10, 92, 52, 0.12); }
-        .hero-overlay { background: linear-gradient(135deg, rgba(10,92,52,0.92) 0%, rgba(46,125,50,0.78) 60%, rgba(10,92,52,0.85) 100%); }
+        
+        /* Premium Design Style Guidelines */
+        .rounded-premium {
+            border-radius: 20px;
+        }
+        .shadow-premium {
+            box-shadow: var(--card-shadow);
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .glassmorphism-green {
+            background: rgba(22, 101, 52, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(22, 101, 52, 0.15);
+        }
+        .stat-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .stat-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 20px 40px -10px rgba(22, 101, 52, 0.1); 
+        }
     </style>
     @stack('styles')
 </head>
-<body class="bg-gray-50">
+<body class="text-slate-800 antialiased">
     @php
         $activeMenu = $activeMenu ?? '';
         $sidebarItems = [
@@ -47,104 +73,201 @@
         ];
     @endphp
 
-    <div class="flex min-h-screen">
-        <aside id="sidebar" class="w-64 bg-hijau-utama text-white flex flex-col transition-all duration-300 ease-in-out shrink-0">
-            <div class="p-5 border-b border-white/10">
-                <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo_padi.png') }}" alt="PADIKU" class="w-10 h-10 rounded-full object-cover ring-2 ring-emas-utama sidebar-logo">
-                    <div class="sidebar-text">
-                        <p class="font-bold text-sm leading-tight">PADIKU</p>
-                        <p class="text-xs text-green-200">Dinas Pertanian</p>
-                    </div>
-                    <button id="sidebarToggle" class="ml-auto p-1.5 rounded-lg hover:bg-white/10 transition sidebar-text">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="flex flex-col min-h-screen">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white border-b border-slate-100 sticky top-0 z-30 shadow-sm">
+            <div class="px-6 py-3.5 flex items-center justify-between gap-4">
+                
+                <!-- Left Side: Hamburger, Logo, Title -->
+                <div class="flex items-center gap-4 shrink-0">
+                    <button id="hamburgerToggle" class="p-2.5 rounded-xl hover:bg-slate-50 text-slate-600 active:scale-95 transition-all duration-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
+                    
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center ring-2 ring-emerald-500/10">
+                            <img src="{{ asset('images/logo_padi.png') }}" alt="PADIKU" class="w-8 h-8 rounded-full object-cover">
+                        </div>
+                        <div>
+                            <span class="font-bold text-slate-800 tracking-tight text-lg block leading-none">PADIKU</span>
+                            <span class="text-[10px] text-emerald-700 font-bold uppercase tracking-wider block mt-0.5">Dinas Pertanian</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Center: Large Search Bar -->
+                <div class="flex-1 max-w-xl mx-auto hidden md:block">
+                    <div class="relative">
+                        <input type="text" placeholder="Cari data pertanian, petani, atau lahan..."
+                               class="w-full px-5 py-2.5 rounded-full bg-slate-50 border border-slate-200/60 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition text-sm">
+                    </div>
+                </div>
+
+                <!-- Right Side: Notifications, Admin Profile -->
+                <div class="flex items-center gap-4 shrink-0">
+                    
+                    <!-- Notification Icon -->
+                    <button class="relative p-2.5 rounded-full hover:bg-slate-50 text-slate-600 transition duration-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-[#FACC15] rounded-full"></span>
+                    </button>
+
+                    <!-- Admin Profile Widget -->
+                    @auth
+                        <div class="relative" id="profileDropdownContainer">
+                            <button id="profileDropdownBtn" class="flex items-center gap-3 pl-3 py-1.5 pr-2 rounded-full hover:bg-slate-50 border border-transparent hover:border-slate-100 transition duration-200 select-none">
+                                <div class="hidden sm:block text-right">
+                                    <p class="text-xs font-semibold text-slate-700 leading-tight">{{ Auth::user()->name }}</p>
+                                    <p class="text-[10px] text-slate-400">{{ Auth::user()->email }}</p>
+                                </div>
+                                <div class="w-9 h-9 bg-emerald-700 text-white rounded-full flex items-center justify-center font-bold text-sm ring-2 ring-emerald-500/20">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                            </button>
+                            
+                            <!-- Profile Dropdown Menu -->
+                            <div id="profileDropdownMenu" class="absolute right-0 mt-2.5 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 hidden z-40 transform origin-top-right transition-all duration-200">
+                                <div class="px-4 py-2 border-b border-slate-50">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Aksi Admin</p>
+                                </div>
+                                <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    Edit Profil
+                                </a>
+                                <hr class="border-slate-100 my-1">
+                                <button onclick="event.preventDefault(); document.getElementById('logoutForm').submit();" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50/50 transition text-left font-medium">
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    Keluar
+                                </button>
+                                <form id="logoutForm" method="POST" action="{{ route('logout') }}" class="hidden">
+                                    @csrf
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" class="text-sm bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-5 py-2.5 rounded-full transition shadow-sm">Login</a>
+                    @endauth
+                    
                 </div>
             </div>
+        </header>
 
+        <!-- Collapsible Sidebar Backdrop -->
+        <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/40 z-30 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+
+        <!-- Collapsible Sidebar Drawer -->
+        <aside id="collapsibleSidebar" class="fixed top-0 bottom-0 left-0 w-72 bg-[#166534] text-white flex flex-col z-40 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl">
+            <!-- Header inside sidebar -->
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo_padi.png') }}" alt="PADIKU" class="w-9 h-9 rounded-full object-cover ring-2 ring-[#FACC15]">
+                    <div>
+                        <p class="font-bold text-base leading-none">PADIKU</p>
+                        <p class="text-[10px] text-emerald-200 font-semibold tracking-wider mt-0.5">Dinas Pertanian</p>
+                    </div>
+                </div>
+                <button id="sidebarCloseBtn" class="p-1.5 rounded-lg hover:bg-white/10 text-white transition active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 @foreach($sidebarItems as $item)
                     <a href="{{ route($item['route']) }}"
-                       class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition {{ $activeMenu === $item['key'] ? 'active' : '' }}">
+                       class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 {{ $activeMenu === $item['key'] ? 'bg-[#FACC15]/20 text-[#FACC15] font-semibold border-l-4 border-[#FACC15]' : 'hover:bg-white/5 text-emerald-100 hover:text-white' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                         </svg>
-                        <span class="sidebar-text text-sm font-medium">{{ $item['label'] }}</span>
+                        <span class="text-sm font-medium">{{ $item['label'] }}</span>
                     </a>
                 @endforeach
             </nav>
 
-            <div class="p-4 border-t border-white/10 sidebar-text">
-                <div class="bg-white/10 rounded-xl p-4">
-                    <p class="text-xs text-green-200 mb-1">Status Sistem</p>
+            <!-- Footer inside sidebar -->
+            <div class="p-6 border-t border-white/10">
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                    <p class="text-[10px] text-emerald-200 uppercase font-bold tracking-wider mb-1">Status Sistem</p>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                        <p class="text-sm font-semibold text-emas-utama">Online</p>
+                        <p class="text-xs font-semibold text-[#FACC15]">Online</p>
                     </div>
-                    <p class="text-xs text-green-300 mt-1">{{ now()->format('d M Y, H:i') }}</p>
+                    <p class="text-[10px] text-emerald-300 mt-2 font-medium">{{ now()->format('d M Y, H:i') }}</p>
                 </div>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0">
-            <header class="bg-hijau-utama text-white shadow-md sticky top-0 z-20">
-                <div class="px-6 py-4 flex items-center justify-between gap-4">
-                    <div class="flex-1 max-w-md">
-                        <div class="relative">
-                            <input type="text" placeholder="Cari data pertanian..."
-                                   class="w-full px-4 py-2.5 pl-10 rounded-xl bg-white/15 text-white placeholder-green-200 focus:outline-none focus:ring-2 focus:ring-emas-utama text-sm">
-                            <svg class="absolute left-3 top-2.5 h-5 w-5 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <button class="relative p-2 rounded-xl hover:bg-white/10 transition">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-emas-utama rounded-full"></span>
-                        </button>
-                        @auth
-                            <div class="flex items-center gap-3 pl-4 border-l border-white/20">
-                                <div class="hidden sm:block text-right">
-                                    <p class="text-sm font-semibold">{{ Auth::user()->name }}</p>
-                                    <p class="text-xs text-green-200">{{ Auth::user()->email }}</p>
-                                </div>
-                                <div class="w-10 h-10 bg-emas-utama rounded-full flex items-center justify-center ring-2 ring-white/30">
-                                    <span class="text-hijau-utama font-bold">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                                </div>
-                            </div>
-                        @else
-                            <a href="{{ route('login') }}" class="text-sm bg-emas-utama text-hijau-utama font-semibold px-4 py-2 rounded-xl hover:bg-yellow-300 transition">Login</a>
-                        @endauth
-                    </div>
-                </div>
-            </header>
-
-            <main class="flex-1 p-6 overflow-auto">
-                @yield('content')
-            </main>
-        </div>
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto">
+            @yield('content')
+        </main>
     </div>
 
+    <!-- Scripts for Core Actions -->
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        let isExpanded = true;
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sidebar Controls
+            const hamburgerToggle = document.getElementById('hamburgerToggle');
+            const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+            const collapsibleSidebar = document.getElementById('collapsibleSidebar');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
-        sidebarToggle?.addEventListener('click', () => {
-            isExpanded = !isExpanded;
-            if (isExpanded) {
-                sidebar.classList.remove('w-[72px]');
-                sidebar.classList.add('w-64');
-                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
-            } else {
-                sidebar.classList.remove('w-64');
-                sidebar.classList.add('w-[72px]');
-                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
+            function openSidebar() {
+                collapsibleSidebar.classList.remove('-translate-x-full');
+                sidebarBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+                sidebarBackdrop.classList.add('opacity-100', 'pointer-events-auto');
+            }
+
+            function closeSidebar() {
+                collapsibleSidebar.classList.add('-translate-x-full');
+                sidebarBackdrop.classList.remove('opacity-100', 'pointer-events-auto');
+                sidebarBackdrop.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            hamburgerToggle?.addEventListener('click', openSidebar);
+            sidebarCloseBtn?.addEventListener('click', closeSidebar);
+            sidebarBackdrop?.addEventListener('click', closeSidebar);
+
+            // Profile Dropdown Controls
+            const profileDropdownBtn = document.getElementById('profileDropdownBtn');
+            const profileDropdownMenu = document.getElementById('profileDropdownMenu');
+            const profileDropdownContainer = document.getElementById('profileDropdownContainer');
+
+            if (profileDropdownBtn && profileDropdownMenu) {
+                profileDropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isHidden = profileDropdownMenu.classList.contains('hidden');
+                    if (isHidden) {
+                        profileDropdownMenu.classList.remove('hidden');
+                        setTimeout(() => {
+                            profileDropdownMenu.classList.remove('scale-95', 'opacity-0');
+                        }, 20);
+                    } else {
+                        profileDropdownMenu.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => {
+                            profileDropdownMenu.classList.add('hidden');
+                        }, 200);
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (profileDropdownContainer && !profileDropdownContainer.contains(e.target)) {
+                        profileDropdownMenu.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => {
+                            profileDropdownMenu.classList.add('hidden');
+                        }, 200);
+                    }
+                });
             }
         });
     </script>

@@ -25,9 +25,12 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/farmers', [DashboardController::class, 'farmers'])->name('dashboard.farmers');
+    Route::post('/dashboard/farmers', [DashboardController::class, 'storeFarmer'])->name('dashboard.farmers.store');
     Route::get('/dashboard/map', [DashboardController::class, 'map'])->name('dashboard.map');
     Route::get('/dashboard/plantings', [DashboardController::class, 'plantings'])->name('dashboard.plantings');
+    Route::post('/dashboard/plantings', [DashboardController::class, 'storePlanting'])->name('dashboard.plantings.store');
     Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pestMonitoring'])->name('dashboard.pest-monitoring');
+    Route::post('/dashboard/pest-reports', [DashboardController::class, 'storePestReport'])->name('dashboard.pest-reports.store');
     Route::get('/dashboard/fertilizer', [DashboardController::class, 'fertilizer'])->name('dashboard.fertilizer');
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
     Route::get('/dashboard/food-balance', [DashboardController::class, 'foodBalance'])->name('dashboard.food-balance');
