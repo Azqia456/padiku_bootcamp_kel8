@@ -378,23 +378,43 @@
             </div>
         </div>
 
-        <!-- Early Warning System (EWS) Alert -->
+        <!-- Pesticide Recommendations for Alert Villages -->
         <div class="border-t border-slate-100 pt-4">
-            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Status EWS Lahan</p>
-            @if($activePestReports > 0)
-                <div class="bg-red-50 border border-red-200 rounded-xl p-3.5 flex gap-3 items-start">
-                    <span class="text-red-500 shrink-0 text-xl mt-0.5">⚠️</span>
-                    <div>
-                        <p class="font-bold text-xs text-red-800">Status: Waspada Hama</p>
-                        <p class="text-[10px] text-red-600 mt-0.5 leading-relaxed">Terdeteksi {{ $activePestReports }} serangan hama aktif di beberapa wilayah. Segera tindaklanjuti laporan petani.</p>
-                    </div>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Rekomendasi Pestisida Desa Waspada</p>
+            @php
+                $alertVillages = \App\Models\PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+                    ->selectRaw('plantings.location_name as village, COUNT(DISTINCT pest_reports.user_id) as reporter_count')
+                    ->where('pest_reports.status', '!=', 'resolved')
+                    ->groupBy('plantings.location_name')
+                    ->get();
+                
+                $waspadaVillages = $alertVillages->filter(function($v) {
+                    return $v->reporter_count >= 3;
+                });
+            @endphp
+
+            @if($waspadaVillages->count() > 0)
+                <div class="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+                    @foreach($waspadaVillages as $v)
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2.5 items-start">
+                            <span class="text-amber-500 shrink-0 text-base mt-0.5">⚠️</span>
+                            <div>
+                                <p class="font-bold text-xs text-amber-800">Desa {{ $v->village }} (Waspada)</p>
+                                <p class="text-[10px] text-amber-700 mt-0.5 leading-normal">
+                                    Terdapat {{ $v->reporter_count }} pelapor hama aktif. Direkomendasikan pembagian **Pestisida Nabati Gratis**.
+                                </p>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @else
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex gap-3 items-start">
-                    <span class="text-emerald-500 shrink-0 text-xl mt-0.5">✅</span>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex gap-2.5 items-start">
+                    <span class="text-emerald-500 shrink-0 text-base mt-0.5">✅</span>
                     <div>
-                        <p class="font-bold text-xs text-emerald-800">Status: Lahan Aman</p>
-                        <p class="text-[10px] text-emerald-600 mt-0.5 leading-relaxed">Kondisi lahan pertanian di seluruh kecamatan terpantau aman dan terkendali dari serangan hama skala besar.</p>
+                        <p class="font-bold text-xs text-emerald-800">Semua Lahan Aman</p>
+                        <p class="text-[10px] text-emerald-600 mt-0.5 leading-relaxed">
+                            Belum ada wilayah berstatus **Waspada (≥ 3 pelapor)**. Rekomendasi pestisida gratis otomatis muncul di sini jika serangan hama meningkat.
+                        </p>
                     </div>
                 </div>
             @endif

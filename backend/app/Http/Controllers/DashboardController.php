@@ -284,7 +284,35 @@ class DashboardController extends Controller
     public function fertilizer()
     {
         $schedules = FertilizerSchedule::with(['user', 'planting'])->get();
-        return view('dashboard.fertilizer', compact('schedules'));
+        
+        // Ambil desa-desa yang statusnya Waspada atau lebih tinggi (jumlah pelapor unik >= 3)
+        $alertVillages = PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->selectRaw('plantings.location_name as village, COUNT(DISTINCT pest_reports.user_id) as reporter_count')
+            ->where('pest_reports.status', '!=', 'resolved')
+            ->groupBy('plantings.location_name')
+            ->having('reporter_count', '>=', 3)
+            ->get();
+
+        return view('dashboard.fertilizer', compact('schedules', 'alertVillages'));
+    }
+
+    public function sendFertilizerNotification(Request $request, $id)
+    {
+        $schedule = FertilizerSchedule::with('user')->findOrFail($id);
+        
+        // Buat notifikasi untuk petani
+        $notification = Notification::create([
+            'user_id' => $schedule->user_id,
+            'title' => 'Jadwal Distribusi Pupuk: ' . $schedule->fertilizer_type,
+            'message' => 'Halo ' . ($schedule->user->name ?? 'Petani') . ', pupuk Anda (' . $schedule->fertilizer_type . ') sebanyak ' . number_format($schedule->amount_kg, 1) . ' kg dijadwalkan didistribusikan pada ' . ($schedule->scheduled_date ? $schedule->scheduled_date->format('d M Y') : '-') . '. Silakan bersiap.',
+            'type' => 'system',
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifikasi pupuk berhasil dikirim ke petani ' . ($schedule->user->name ?? '')
+        ]);
     }
 
     public function getNotificationsData()

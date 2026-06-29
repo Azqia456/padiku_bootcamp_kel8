@@ -35,8 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pestMonitoring'])->name('dashboard.pest-monitoring');
     Route::post('/dashboard/pest-reports', [DashboardController::class, 'storePestReport'])->name('dashboard.pest-reports.store');
     
-    // Informasi & Analisis
     Route::get('/dashboard/fertilizer', [DashboardController::class, 'fertilizer'])->name('dashboard.fertilizer');
+    Route::post('/dashboard/fertilizer-schedules/{id}/notify', [DashboardController::class, 'sendFertilizerNotification'])->name('dashboard.fertilizer.notify');
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
     Route::get('/dashboard/food-balance', [DashboardController::class, 'foodBalance'])->name('dashboard.food-balance');
     Route::get('/dashboard/data-analysis', [DashboardController::class, 'dataAnalysis'])->name('dashboard.data-analysis');
