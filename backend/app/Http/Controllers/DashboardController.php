@@ -287,8 +287,58 @@ class DashboardController extends Controller
         return view('dashboard.fertilizer', compact('schedules'));
     }
 
-    public function earlyWarning()
+    public function getNotificationsData()
     {
-        return view('dashboard.early-warning');
+        $criticalPests = PestReport::with(['user', 'planting'])
+            ->whereIn('severity', ['high', 'critical'])
+            ->where('status', '!=', 'resolved')
+            ->orderBy('report_date', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => 'pest',
+                    'title' => 'Serangan Hama Kritis: ' . $item->pest_type,
+                    'message' => 'Dilaporkan oleh ' . ($item->user->name ?? 'Petani') . ' di Desa ' . ($item->planting->location_name ?? 'Lahan'),
+                    'time' => $item->report_date ? $item->report_date->format('d M Y') : $item->created_at->format('d M Y')
+                ];
+            });
+
+        $upcomingHarvests = Planting::with('user')
+            ->whereBetween('expected_harvest_date', [now(), now()->addDays(14)])
+            ->orderBy('expected_harvest_date', 'asc')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => 'harvest',
+                    'title' => 'Panen Mendekat di Desa ' . $item->location_name,
+                    'message' => 'Petani ' . ($item->user->name ?? 'Petani') . ' (Varietas: ' . $item->rice_variety . ')',
+                    'time' => $item->expected_harvest_date ? $item->expected_harvest_date->format('d M Y') : ''
+                ];
+            });
+
+        $recentNotifications = Notification::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => 'system',
+                    'title' => $item->title,
+                    'message' => $item->message,
+                    'time' => $item->created_at->format('d M Y, H:i')
+                ];
+            });
+
+        // Merge all warning types into a single list
+        $notifications = collect()
+            ->concat($criticalPests)
+            ->concat($upcomingHarvests)
+            ->concat($recentNotifications);
+
+        return response()->json([
+            'notifications' => $notifications,
+            'totalCount' => $notifications->count()
+        ]);
     }
 }

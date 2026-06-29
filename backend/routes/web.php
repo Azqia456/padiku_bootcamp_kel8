@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
     Route::get('/dashboard/food-balance', [DashboardController::class, 'foodBalance'])->name('dashboard.food-balance');
     Route::get('/dashboard/data-analysis', [DashboardController::class, 'dataAnalysis'])->name('dashboard.data-analysis');
-    Route::get('/dashboard/early-warning', [DashboardController::class, 'earlyWarning'])->name('dashboard.early-warning');
+    Route::get('/dashboard/notifications-data', [DashboardController::class, 'getNotificationsData'])->name('dashboard.notifications-data');
 });
 
 Route::middleware('auth')->group(function () {
