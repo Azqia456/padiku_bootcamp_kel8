@@ -59,6 +59,8 @@ flutter:
     - assets/images/logo_padi.png
     - assets/images/bg.jpg
     - assets/images/bg_db.png
+    - assets/images/Farmers harvesting rice in Vietnam_.jpeg
+    - assets/images/logo_padi_dashboard.png
     # Tambahkan baris di bawah ini:
     - assets/images/belalang.png
     - assets/images/blas.png
