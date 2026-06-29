@@ -51,10 +51,14 @@ class DashboardController extends Controller
 
         $totalFertilizer = FertilizerSchedule::count();
         
+        $foodTotalProduction = Planting::where('status', 'harvested')->sum('area_hectares') * 5;
+        $foodTotalConsumption = $totalFarmers * 0.3;
+        $foodBalance = $foodTotalProduction - $foodTotalConsumption;
+        
         return view('dashboard.index', compact(
             'totalPlantings', 'totalArea', 'totalPestReports', 'activePestReports', 'totalFarmers', 
             'plantingsByDistrict', 'recentPestReports', 'productionByStatus', 'monthlyProduction', 
-            'recentFarmers', 'totalFertilizer'
+            'recentFarmers', 'totalFertilizer', 'foodTotalProduction', 'foodTotalConsumption', 'foodBalance'
         ));
     }
 
@@ -126,6 +130,42 @@ class DashboardController extends Controller
         Planting::create($validated);
         return response()->json(['success' => true, 'message' => 'Data lahan tanam berhasil ditambahkan!']);
     }
+
+    public function checkHarvestConflict(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'planting_date' => 'required|date'
+        ]);
+
+        $user = User::find($request->user_id);
+        if (!$user) {
+            return response()->json(['conflict' => false]);
+        }
+
+        $plantingDate = \Carbon\Carbon::parse($request->planting_date);
+        
+        $conflicts = Planting::whereHas('user', function($q) use ($user) {
+                $q->where('district', $user->district);
+            })
+            ->whereBetween('planting_date', [
+                $plantingDate->copy()->subDays(7), 
+                $plantingDate->copy()->addDays(7)
+            ])
+            ->count();
+
+        // If >= 1 other planting in the same district around that week, trigger conflict
+        if ($conflicts >= 1) {
+            return response()->json([
+                'conflict' => true,
+                'message' => '⚠️ Peringatan: Terdapat potensi panen serempak (' . $conflicts . ' lahan) di Kec. ' . $user->district . ' pada minggu ini. Disarankan menunda masa tanam.',
+                'recommendation_date' => $plantingDate->copy()->addDays(7)->format('Y-m-d')
+            ]);
+        }
+
+        return response()->json(['conflict' => false]);
+    }
+
 
     public function storePestReport(Request $request)
     {

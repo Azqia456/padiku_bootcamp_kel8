@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/map', [DashboardController::class, 'map'])->name('dashboard.map');
     Route::get('/dashboard/plantings', [DashboardController::class, 'plantings'])->name('dashboard.plantings');
     Route::post('/dashboard/plantings', [DashboardController::class, 'storePlanting'])->name('dashboard.plantings.store');
+    Route::post('/dashboard/plantings/check-conflict', [DashboardController::class, 'checkHarvestConflict'])->name('dashboard.plantings.check-conflict');
     
     // Hama & Monitoring
     Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pestMonitoring'])->name('dashboard.pest-monitoring');
