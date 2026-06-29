@@ -149,10 +149,42 @@ class DashboardController extends Controller
     public function map()
     {
         $plantings = Planting::with('user')->get();
-        $plantingData = Planting::selectRaw('users.district, COUNT(*) as total_plantings, SUM(area_hectares) as total_area')
+
+        $plantingData = Planting::selectRaw('
+                users.district,
+                COUNT(*) as total_plantings,
+                SUM(plantings.area_hectares) as total_area,
+                SUM(plantings.area_hectares * 5) as estimated_yield,
+                AVG(DATEDIFF(NOW(), plantings.planting_date) / 30) as avg_age_months,
+                (SELECT status FROM plantings p2
+                    JOIN users u2 ON p2.user_id = u2.id
+                    WHERE u2.district = users.district
+                    GROUP BY p2.status ORDER BY COUNT(*) DESC LIMIT 1
+                ) as dominant_phase
+            ')
             ->join('users', 'plantings.user_id', '=', 'users.id')
             ->groupBy('users.district')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $phaseLabels = [
+                    'planted'    => 'Baru Tanam',
+                    'growing'    => 'Pertumbuhan',
+                    'harvested'  => 'Selesai Panen',
+                    'ready'      => 'Siap Panen',
+                ];
+                $item->phase_label = $phaseLabels[$item->dominant_phase] ?? ucfirst($item->dominant_phase ?? '-');
+                $item->avg_age_months = round($item->avg_age_months ?? 0, 1);
+
+                $item->common_variety = Planting::join('users', 'plantings.user_id', '=', 'users.id')
+                    ->where('users.district', $item->district)
+                    ->selectRaw('rice_variety, COUNT(*) as c')
+                    ->groupBy('rice_variety')
+                    ->orderByDesc('c')
+                    ->first();
+
+                return $item;
+            });
+
         return view('dashboard.map', compact('plantings', 'plantingData'));
     }
     
@@ -208,8 +240,45 @@ class DashboardController extends Controller
 
     public function pestMonitoring()
     {
-        $pestReports = PestReport::with(['user', 'planting'])->get();
-        return view('dashboard.pest-monitoring', compact('pestReports'));
+        $pestReports = PestReport::with(['user', 'planting'])->orderBy('report_date', 'desc')->get();
+        
+        $activeCount = PestReport::where('status', '!=', 'resolved')->count();
+        
+        $severityStats = PestReport::selectRaw('severity, COUNT(*) as count')
+            ->groupBy('severity')
+            ->orderByRaw("FIELD(severity, 'critical', 'high', 'medium', 'low')")
+            ->get();
+
+        $pestData = PestReport::selectRaw('
+                plantings.location_name as district,
+                COUNT(pest_reports.id) as total_reports,
+                SUM(plantings.area_hectares) as affected_area,
+                COUNT(DISTINCT pest_reports.user_id) as affected_farmers,
+                (COUNT(CASE WHEN pest_reports.severity IN (\'high\',\'critical\') THEN 1 END) / COUNT(pest_reports.id)) * 100 as severity_percentage
+            ')
+            ->join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->groupBy('plantings.location_name')
+            ->get()
+            ->map(function ($item) {
+                $item->common_pest = PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+                    ->where('plantings.location_name', $item->district)
+                    ->selectRaw('pest_type, COUNT(*) as c')
+                    ->groupBy('pest_type')
+                    ->orderByDesc('c')
+                    ->first();
+                return $item;
+            });
+
+        // Jumlah pelapor unik (user_id) per desa berdasarkan location_name lahan
+        $villageReportCounts = PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->selectRaw('plantings.location_name as village, COUNT(DISTINCT pest_reports.user_id) as reporter_count')
+            ->groupBy('plantings.location_name')
+            ->get()
+            ->pluck('reporter_count', 'village');
+
+        return view('dashboard.pest-monitoring', compact(
+            'pestReports', 'pestData', 'activeCount', 'severityStats', 'villageReportCounts'
+        ));
     }
 
     public function fertilizer()

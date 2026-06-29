@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('nik', 16)->nullable()->after('phone');
+            $table->string('village')->nullable()->after('district');
+        });
     }
 
     /**
@@ -18,10 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['nik', 'village']);
+        });
     }
-    
-public function plantings()
-{
-    return $this->hasMany(Planting::class);
-}
 };

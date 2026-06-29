@@ -46,23 +46,8 @@
 <x-page-banner
     title="Monitoring Hama"
     subtitle="Pantau laporan serangan hama dari petani"
-    overlay="from-red-900/80 to-[#0A5C34]/60"
+    image="bg_hama.jpg"
 />
-
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-red-400">
-        <p class="text-sm text-gray-500">Total Laporan</p>
-        <p class="text-3xl font-bold text-red-600">{{ $pestReports->count() }}</p>
-    </div>
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-orange-400">
-        <p class="text-sm text-gray-500">Laporan Aktif</p>
-        <p class="text-3xl font-bold text-orange-600">{{ $activeCount }}</p>
-    </div>
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-400">
-        <p class="text-sm text-gray-500">Sudah Ditangani</p>
-        <p class="text-3xl font-bold text-green-600">{{ $pestReports->where('status', 'resolved')->count() }}</p>
-    </div>
-</div>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
     <div class="lg:col-span-3">
@@ -76,20 +61,20 @@
 
     <div class="space-y-4">
         <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-red-500">
-            <p class="text-sm text-gray-500">Total Laporan Hama</p>
-            <p class="text-3xl font-bold text-hijau-utama">{{ $pestData->sum('total_reports') }}</p>
+            <p class="text-sm text-gray-500">Total Laporan</p>
+            <p class="text-3xl font-bold text-red-600">{{ $pestReports->count() }}</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-orange-500">
+            <p class="text-sm text-gray-500">Laporan Aktif</p>
+            <p class="text-3xl font-bold text-orange-600">{{ $activeCount }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-yellow-500">
             <p class="text-sm text-gray-500">Wilayah Terdampak</p>
             <p class="text-3xl font-bold text-hijau-utama">{{ $pestData->count() }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-yellow-500">
+        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500">
             <p class="text-sm text-gray-500">Petani Terdampak</p>
             <p class="text-3xl font-bold text-hijau-utama">{{ $pestData->sum('affected_farmers') }}</p>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500">
-            <p class="text-sm text-gray-500">Luas Lahan Terdampak</p>
-            <p class="text-3xl font-bold text-hijau-utama">{{ number_format($pestData->sum('affected_area'), 2) }} Ha</p>
         </div>
     </div>
 </div>
@@ -194,58 +179,98 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const map = L.map('map').setView([-6.3224, 107.3376], 10);
-        
+
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(map);
 
-        function dapatkanWarnaRandom() {
-            const status = [
+        // Data jumlah pelapor per desa dari database (location_name → jumlah user unik)
+        const villageReportCounts = @json($villageReportCounts);
+
+        /**
+         * Tentukan status hama secara acak untuk kebutuhan demo/project,
+         * KECUALI desa Cikampek Pusaka yang Wajib Hijau (Aman).
+         */
+        function getVillageStatus(villageName) {
+            const nameNorm = villageName.toLowerCase().replace(/\s+/g, '').trim();
+            
+            // Ambil jumlah pelapor asli dari database jika ada
+            let count = 0;
+            for (const [key, val] of Object.entries(villageReportCounts)) {
+                if (key.toLowerCase().replace(/\s+/g, '').trim() === nameNorm) {
+                    count = val;
+                    break;
+                }
+            }
+
+            // Cikampek Pusaka wajib Hijau (Aman) untuk awal demo
+            if (nameNorm === 'cikampekpusaka') {
+                return { color: '#00B159', name: 'Aman', count: count };
+            }
+
+            // List status/warna
+            const statuses = [
                 { color: '#D11141', name: 'Sangat Tinggi' },
-                { color: '#FFC425', name: 'Tinggi' },
-                { color: '#F37735', name: 'Waspada' },
+                { color: '#F37735', name: 'Tinggi' },
+                { color: '#FFC425', name: 'Waspada' },
                 { color: '#00B159', name: 'Aman' }
             ];
-            return status[Math.floor(Math.random() * status.length)];
+
+            // Gunakan simple hash string agar warna per desa konsisten/tidak berubah-ubah setiap reload
+            let hash = 0;
+            for (let i = 0; i < nameNorm.length; i++) {
+                hash = nameNorm.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % statuses.length;
+            const status = statuses[index];
+
+            return { color: status.color, name: status.name, count: count };
         }
 
         // Memuat file GeoJSON
         fetch("{{ asset('geojson/karawang-desa.json') }}")
             .then(res => res.json())
             .then(function(geojson) {
-            L.geoJSON(geojson, {
-                style: function(feature) {
-                    const status = dapatkanWarnaRandom();
-                    feature.properties.statusHama = status.name;
-                    feature.properties.warnaHama = status.color;
-                    
-                    return {
-                        fillColor: status.color,
-                        weight: 1,
-                        opacity: 1,
-                        color: 'white',
-                        fillOpacity: 0.7
-                    };
-                },
-                onEachFeature: function(feature, layer) {
-                    const namaDesa = feature.properties.NAMOBJ || feature.properties.DESA || feature.properties.NAME_4 || 'Desa';
-                    const kecamatan = feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.NAME_3 || 'Kecamatan';
-                    
-                    layer.bindPopup(
-                        `<div style="font-size: 13px;">` +
-                        `<b style="color: #333; font-size: 14px;">${namaDesa}</b><br>` +
-                        `<span style="color: #666;">Kec. ${kecamatan}</span><hr style="margin: 5px 0;">` +
-                        `<b>Status Hama:</b> <span style="color: ${feature.properties.warnaHama}; font-weight: bold;">${feature.properties.statusHama}</span>` +
-                        `</div>`
-                    );
-                }
-            }).addTo(map);
-        }).catch(function(error) {
-            console.error("Gagal memuat GeoJSON:", error);
-            document.getElementById('map').innerHTML = "<div style='padding: 20px; text-align: center; color: red;'>Gagal memuat data peta (pastikan karawang-desa.json ada di public/geojson/)</div>";
-        });
+                L.geoJSON(geojson, {
+                    style: function(feature) {
+                        const namaDesa = feature.properties.NAMOBJ || feature.properties.DESA || feature.properties.NAME_4 || '';
+                        const status = getVillageStatus(namaDesa);
+                        feature.properties.statusHama  = status.name;
+                        feature.properties.warnaHama   = status.color;
+                        feature.properties.jumlahLapor = status.count;
+
+                        return {
+                            fillColor:   status.color,
+                            weight:      1,
+                            opacity:     1,
+                            color:       'white',
+                            fillOpacity: 0.7
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const namaDesa   = feature.properties.NAMOBJ || feature.properties.DESA || feature.properties.NAME_4 || 'Desa';
+                        const kecamatan  = feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.NAME_3 || 'Kecamatan';
+                        const jumlah     = feature.properties.jumlahLapor || 0;
+                        const warna      = feature.properties.warnaHama;
+                        const statusNama = feature.properties.statusHama;
+
+                        layer.bindPopup(
+                            `<div style="font-size: 13px;">` +
+                            `<b style="color: #333; font-size: 14px;">${namaDesa}</b><br>` +
+                            `<span style="color: #666;">Kec. ${kecamatan}</span>` +
+                            `<hr style="margin: 5px 0;">` +
+                            `<b>Status Hama:</b> <span style="color: ${warna}; font-weight: bold;">${statusNama}</span><br>` +
+                            `<b>Pelapor:</b> ${jumlah} petani` +
+                            `</div>`
+                        );
+                    }
+                }).addTo(map);
+            }).catch(function(error) {
+                console.error("Gagal memuat GeoJSON:", error);
+                document.getElementById('map').innerHTML = "<div style='padding: 20px; text-align: center; color: red;'>Gagal memuat data peta (pastikan karawang-desa.json ada di public/geojson/)</div>";
+            });
 
         // Kontrol Legenda Peta
         const legend = L.control({position: 'bottomleft'});
@@ -253,8 +278,8 @@
             const div = L.DomUtil.create('div', 'info legend');
             div.innerHTML += '<h4>Tingkat Serangan Hama</h4>';
             div.innerHTML += '<i style="background: #00B159"></i> Aman<br>';
-            div.innerHTML += '<i style="background: #F37735"></i> Waspada<br>';
-            div.innerHTML += '<i style="background: #FFC425"></i> Tinggi<br>';
+            div.innerHTML += '<i style="background: #FFC425"></i> Waspada<br>';
+            div.innerHTML += '<i style="background: #F37735"></i> Tinggi<br>';
             div.innerHTML += '<i style="background: #D11141"></i> Sangat Tinggi<br>';
             return div;
         };

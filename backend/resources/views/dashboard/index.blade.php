@@ -161,7 +161,7 @@
             <div class="absolute flex flex-col items-center justify-center pointer-events-none select-none">
                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Total Lahan</span>
                 <span class="text-2xl font-black text-slate-800 leading-tight mt-1">
-                    {{ number_format($totalArea ?: 450.5, 1) }}
+                    450.5
                 </span>
                 <span class="text-[9px] font-bold text-emerald-800 leading-none">Hektar (Ha)</span>
             </div>
@@ -613,21 +613,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // CHARTS CONFIGURATION
     // =========================================================================
     
-    // 1. Line Chart: Agricultural Production
+    // 1. Line Chart: Agricultural Production (Mocked for presentation)
     const productionCtx = document.getElementById('productionChart').getContext('2d');
-    const productionDataRaw = @json($monthlyProduction);
     
-    let prodLabels = productionDataRaw.map(item => {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
-        return `${monthNames[item.month - 1]} ${item.year}`;
-    });
-    let prodValues = productionDataRaw.map(item => parseFloat(item.total_area) * 5); // 5 tons per Hectare conversion
-    
-    // Fallback Mockup Data if database contains empty statistics
-    if (prodValues.length === 0) {
-        prodLabels = ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "Mei 2026", "Jun 2026"];
-        prodValues = [712, 841, 977, 1150, 1079, 1302]; // Tons
-    }
+    const prodLabels = ["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "Mei 2026", "Jun 2026"];
+    const prodValues = [712, 841, 977, 1150, 1079, 1302]; // Tons
 
     const prodGradient = productionCtx.createLinearGradient(0, 0, 0, 300);
     prodGradient.addColorStop(0, 'rgba(22, 101, 52, 0.25)');
@@ -679,9 +669,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Doughnut Chart: Land Distribution
+    // 2. Doughnut Chart: Land Distribution (Mocked for presentation)
     const landCtx = document.getElementById('landDistributionChart').getContext('2d');
-    const totalAreaValue = parseFloat("{{ $totalArea }}") || 450.5;
+    const totalAreaValue = 450.5;
 
     new Chart(landCtx, {
         type: 'doughnut',

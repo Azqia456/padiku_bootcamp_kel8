@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/plantings', [DashboardController::class, 'storePlanting'])->name('dashboard.plantings.store');
     
     // Hama & Monitoring
-    Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pest-monitoring'])->name('dashboard.pest-monitoring');
+    Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pestMonitoring'])->name('dashboard.pest-monitoring');
     Route::post('/dashboard/pest-reports', [DashboardController::class, 'storePestReport'])->name('dashboard.pest-reports.store');
     
     // Informasi & Analisis

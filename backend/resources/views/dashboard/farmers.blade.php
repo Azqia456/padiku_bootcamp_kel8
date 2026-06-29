@@ -20,144 +20,85 @@
 
 
 
-<x-page-banner title="Manajemen Petani" subtitle="Kelola data petani terdaftar di wilayah Karawang" image="image_32954a.jpg" />
+<x-page-banner title="Manajemen Petani" subtitle="Kelola data petani terdaftar di wilayah Karawang" image="bg_petani.png" />
 
-
-
-<div class="bg-white rounded-xl shadow-sm overflow-hidden p-6">
-
-
-
-<div class="flex justify-between items-center mb-6 mt-6">
-
+<div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 border border-slate-100">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-2">
         <div>
-
-            <h2 class="text-2xl font-bold text-gray-800">Daftar Petani</h2>
-
-            <p class="text-sm text-gray-500 font-medium">{{ $farmers->count() }} petani terdaftar</p>
-
+            <h2 class="text-xl font-bold text-slate-800">Daftar Petani</h2>
+            <p class="text-sm text-slate-500 font-medium">{{ $farmers->count() }} petani terdaftar</p>
         </div>
-
        
-
-        <div class="flex items-center gap-3">
-
-            <form action="{{ route('dashboard.farmers') }}" method="GET" class="flex">
-
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <form action="{{ route('dashboard.farmers') }}" method="GET" class="flex flex-1 sm:flex-initial">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari petani..."
-
-                       class="border border-gray-300 rounded-full px-5 py-2.5 w-64 focus:ring-2 focus:ring-green-600 outline-none transition">
-
+                       class="border border-slate-200 rounded-full px-5 py-2.5 w-full sm:w-64 focus:ring-2 focus:ring-green-600 outline-none transition text-sm">
             </form>
-
            
-
             <button onclick="toggleModal('modalTambah', true)"
-
-                    class="bg-[#004d2e] text-white px-6 py-2.5 rounded-full font-semibold hover:bg-green-900 transition flex items-center gap-2">
-
+                    class="bg-[#004d2e] text-white px-6 py-2.5 rounded-full font-semibold hover:bg-green-900 transition flex items-center gap-2 text-sm shrink-0">
                 <span>+</span> Tambah Petani
-
             </button>
-
         </div>
-
     </div>
 
- 
-
-    <table class="w-full text-sm">
-
-        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
-
-            <tr>
-
-                <th class="px-6 py-4 text-left">Nama</th>
-
-                <th class="px-6 py-4 text-left">Email</th>
-
-                <th class="px-6 py-4 text-left">Telepon</th>
-
-                <th class="px-6 py-4 text-left">Kecamatan</th>
-
-                <th class="px-6 py-4 text-left">Lahan</th>
-
-                <th class="px-6 py-4 text-left">Status</th>
-
-                <th class="px-6 py-4 text-center">Aksi</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody class="divide-y">
-
-    @foreach($farmers as $farmer)
-
-    <tr class="hover:bg-gray-50">
-
-        <td class="px-6 py-4 flex items-center gap-3">
-
-            @if(!empty($farmer->photo_url))
-
-                <img src="{{ asset($farmer->photo_url) }}" alt="Foto {{ $farmer->name }}"
-
-                     class="w-8 h-8 rounded-full object-cover">
-
-            @else
-
-                <div class="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold">
-
-                    {{ strtoupper(substr($farmer->name, 0, 1)) }}
-
-                </div>
-
-            @endif
-
-            <span class="font-medium text-gray-900">{{ $farmer->name }}</span>
-
-        </td>
-
-       
-
-        <td class="px-6 py-4 text-gray-600">{{ $farmer->email }}</td>
-
-        <td class="px-6 py-4 text-gray-600">{{ $farmer->phone }}</td>
-
-        <td class="px-6 py-4 text-gray-600">{{ $farmer->district }}</td>
-
-        <td class="px-6 py-4 font-semibold">{{ $farmer->plantings_sum_area_hectares ?? 0 }} Ha</td>
-
-       
-
-        <td class="px-6 py-4">
-
-            <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">● Aktif Tanam</span>
-
-        </td>
-
-       
-
-        <td class="px-6 py-4 flex justify-center gap-2">
-
-            <button class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg border border-orange-200">Edit</button>
-
-            <form action="{{ route('dashboard.farmers.destroy', $farmer->id) }}" method="POST" onsubmit="return confirm('Yakin hapus data ini?')">
-
-                @csrf @method('DELETE')
-
-                <button type="submit" class="bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-200">Hapus</button>
-
-            </form>
-
-        </td>
-
-    </tr>
-
-    @endforeach
-
-</tbody>
-
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-100">
+                <tr>
+                    <th class="px-6 py-4 text-left">Nama</th>
+                    <th class="px-6 py-4 text-left">Email</th>
+                    <th class="px-6 py-4 text-left">Telepon</th>
+                    <th class="px-6 py-4 text-left">Kecamatan</th>
+                    <th class="px-6 py-4 text-left">Lahan</th>
+                    <th class="px-6 py-4 text-left">Status</th>
+                    <th class="px-6 py-4 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach($farmers as $farmer)
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            @if(!empty($farmer->profile_photo_path))
+                                <img src="{{ asset('storage/' . $farmer->profile_photo_path) }}" alt="Foto {{ $farmer->name }}"
+                                     class="w-9 h-9 rounded-full object-cover border border-slate-200">
+                            @else
+                                <div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm border border-emerald-100">
+                                    {{ strtoupper(substr($farmer->name, 0, 1)) }}
+                                </div>
+                            @endif
+                            <span class="font-semibold text-slate-800">{{ $farmer->name }}</span>
+                        </div>
+                    </td>
+                   
+                    <td class="px-6 py-4 text-slate-600">{{ $farmer->email }}</td>
+                    <td class="px-6 py-4 text-slate-600">{{ $farmer->phone }}</td>
+                    <td class="px-6 py-4 text-slate-500 font-medium">{{ $farmer->district }}</td>
+                    <td class="px-6 py-4 font-bold text-emerald-800">{{ $farmer->plantings_sum_area_hectares ?? 0 }} Ha</td>
+                   
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Aktif Tanam
+                        </span>
+                    </td>
+                   
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center items-center gap-2">
+                            <button class="bg-slate-50 text-slate-600 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 transition text-xs font-semibold">Edit</button>
+                            <form action="{{ route('dashboard.farmers.destroy', $farmer->id) }}" method="POST" onsubmit="return confirm('Yakin hapus data ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
 <div id="modalTambah" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
 
     <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
