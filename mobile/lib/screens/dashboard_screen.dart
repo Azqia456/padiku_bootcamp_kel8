@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
+import '../utils/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final int initialIndex;
@@ -696,53 +697,82 @@ Widget _buildModernPestCard({
   );
 }
 
-class HomeDashboard extends StatelessWidget {
+class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
 
   @override
+  State<HomeDashboard> createState() => _HomeDashboardState();
+}
+
+class _HomeDashboardState extends State<HomeDashboard> {
+  String _userName = 'Petani';
+  String _lahanAktif = '0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    final profile = await ApiService.getUserProfile();
+    if (mounted) {
+      setState(() {
+        _userName = profile['name'] ?? 'Petani';
+        _lahanAktif = profile['lahan_aktif'] ?? '0';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 30),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildCustomHeader(context),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+    return Column(
+      children: [
+        _buildTopHeader(context),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildWelcomeHeroCard(),
                 const SizedBox(height: 20),
-                _buildTotalLahanCard(),
-                const SizedBox(height: 16),
-                _buildLineChartCard(),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildGridCard(
-                        'Jadwal',
-                        'Tanam',
-                        Icons.calendar_month,
-                        Colors.green,
-                        onTap: () {
-                          Navigator.pushNamed(context, Routes.kalenderTanam);
-                        },
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: _buildTotalLahanCard(),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildGridCard(
-                        'Status',
-                        'Panen',
-                        Icons.grass,
-                        Colors.orange,
-                        onTap: () {
-                          Navigator.pushNamed(context, Routes.laporanPanen);
-                        },
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildHorizontalMiniCard(
+                              'Jadwal Tanam',
+                              Icons.calendar_month_rounded,
+                              Colors.green,
+                              () {
+                                Navigator.pushNamed(context, Routes.kalenderTanam);
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _buildHorizontalMiniCard(
+                              'Status Panen',
+                              Icons.grass_rounded,
+                              Colors.orange,
+                              () {
+                                Navigator.pushNamed(context, Routes.laporanPanen);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildListTileCard(
@@ -830,30 +860,180 @@ class HomeDashboard extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 12),
-                _buildNotificationsList(),
-                const SizedBox(height: 24),
-                const Text(
-                  'Rekomendasi Budidaya',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopHeader(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 50, 20, 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo_padi_dashboard.png',
+                    width: 22,
+                    height: 22,
+                    fit: BoxFit.contain,
                   ),
                 ),
-                const SizedBox(height: 12),
-                _buildOriginalRecommendationCard(
-                  'Gunakan Mulsa Jerami',
-                  'Menjaga kelembaban tanah dan menekan pertumbuhan gulma',
-                  Icons.grass,
-                  Colors.green,
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'PADIKU',
+                style: TextStyle(
+                  color: Color(0xFF2E7D32),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
-                const SizedBox(height: 8),
-                _buildOriginalRecommendationCard(
-                  'Hindari Pembakaran Jerami',
-                  'Jerami dapat dijadikan kompos',
-                  Icons.block,
-                  Colors.red,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.support_agent_rounded,
+                  color: Colors.black54,
+                  size: 24,
+                ),
+                tooltip: 'Pusat Bantuan',
+                onPressed: () {
+                  Navigator.pushNamed(context, Routes.pusatBantuan);
+                },
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: Colors.black54,
+                  size: 26,
+                ),
+                tooltip: 'Notifikasi',
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeHeroCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF064E3B), Color(0xFF0F5132), Color(0xFF14532D)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF064E3B).withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Opacity(
+                opacity: 0.15,
+                child: Image.asset(
+                  'assets/images/Farmers harvesting rice in Vietnam_.jpeg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFC107),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'PETANI MANDIRI',
+                        style: TextStyle(
+                          color: Color(0xFFA3E635),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Selamat Datang,\n$_userName',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Platform Digital Pertanian Kabupaten Karawang untuk monitoring lahan, produksi, petani, dan sistem peringatan dini.',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 12,
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
@@ -863,271 +1043,132 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomHeader(BuildContext context) {
-    return ClipPath(
-      clipper: HeaderClipper(),
-      child: Container(
-        height: 255, // Sedikit ditinggikan agar konten di bawahnya tetap punya ruang
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF43A047), Color(0xFF2E7D32)],
-          ),
-        ),
-        child: Stack(
-          children: [
-            // Layer 1: Gambar background yang posisinya diturunkan (navbar hijau di atasnya)
-            Positioned(
-              top: 95, // Jarak 95px dari atas menjadi warna hijau solid
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(
-                      'assets/images/Farmers harvesting rice in Vietnam_.jpeg',
-                    ),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(Colors.black26, BlendMode.darken),
-                  ),
-                ),
-              ),
-            ),
-            
-            // Layer 2: Konten UI Header
-            Padding(
-              padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          // Ikon menu dihapus di sini
-                          SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: Image.asset(
-                              'assets/images/logo_padi_dashboard.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'PADIKU',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.support_agent,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            tooltip: 'Pusat Bantuan',
-                            onPressed: () {
-                              Navigator.pushNamed(context, Routes.pusatBantuan);
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.notifications_none,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const PupukSubsidiModule(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                  const Text(
-                    'Selamat datang,',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Petani',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: const [
-                      Text(
-                        'Semangat bertani hari ini!',
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.grass, color: Colors.yellow, size: 16),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTotalLahanCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: Colors.green.shade50),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.landscape,
-                  color: Colors.white,
-                  size: 28,
+              const Text(
+                'Total Lahan',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const Text(
+                'Aktif',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
-                  const Text(
-                    'Total Lahan Aktif',
-                    style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                  Text(
+                    _lahanAktif,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E7D32),
                     ),
                   ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: const [
-                      Text(
-                        '27',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E7D32),
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Hektar',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 2),
+                  const Text(
+                    ' Ha',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          Icon(Icons.home_work, color: Colors.green.shade200, size: 40),
         ],
       ),
     );
   }
 
-  Widget _buildLineChartCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
+  Widget _buildHorizontalMiniCard(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+            border: Border.all(color: Colors.grey.shade100),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Expanded(
-                child: const Text(
-                  'Luas Lahan Aktif (Hektar)',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text(
-                      '3 Tahun Terakhir',
-                      style: TextStyle(fontSize: 12, color: Colors.black87),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.keyboard_arrow_down, size: 16),
-                  ],
-                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.black38,
+                size: 18,
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 140,
-            width: double.infinity,
-            child: CustomPaint(painter: LineChartPainter()),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1550,8 +1591,30 @@ class LineChartPainter extends CustomPainter {
 // KELAS-KELAS ORIGINAL ANDA (Dikembalikan seperti semula agar tidak error)
 // =====================================================================
 
-class DataLahanModule extends StatelessWidget {
+class DataLahanModule extends StatefulWidget {
   const DataLahanModule({super.key});
+
+  @override
+  State<DataLahanModule> createState() => _DataLahanModuleState();
+}
+
+class _DataLahanModuleState extends State<DataLahanModule> {
+  String _lahanAktif = '0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLahanData();
+  }
+
+  Future<void> _loadLahanData() async {
+    final profile = await ApiService.getUserProfile();
+    if (mounted) {
+      setState(() {
+        _lahanAktif = profile['lahan_aktif'] ?? '0';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1567,7 +1630,7 @@ class DataLahanModule extends StatelessWidget {
           children: [
             _buildQuickInfoChip(
               label: 'Lahan aktif',
-              value: '27 Hektar',
+              value: '$_lahanAktif Hektar',
               icon: Icons.grass_rounded,
             ),
             const SizedBox(width: 12),
@@ -1782,6 +1845,7 @@ class LaporHamaModule extends StatefulWidget {
 
 class _LaporHamaModuleState extends State<LaporHamaModule> {
   String? _selectedPestType;
+  bool _isLoading = false;
   final List<String> _pestTypes = [
     'Wereng',
     'Walang Sangit',
@@ -1790,6 +1854,46 @@ class _LaporHamaModuleState extends State<LaporHamaModule> {
     'Penyakit Blas',
     'Lainnya',
   ];
+
+  Future<void> _submitReport() async {
+    if (_selectedPestType == null) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Pest Report Payload matching PestReportController
+    final data = {
+      'pest_type': _selectedPestType,
+      'severity': 'medium', // Default for now
+      'report_date': DateTime.now().toIso8601String().split('T')[0],
+      'description': 'Dilaporkan dari aplikasi mobile (GPS Lokasi Aktif).',
+      // 'planting_id' might be required by backend validation, ideally we fetch plantings first.
+      // But we will send it and let the controller handle it if possible.
+      'planting_id': 1 // Dummy ID, usually we should let the user select their planting.
+    };
+
+    final result = await ApiService.submitPestReport(data);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Berhasil dikirim!')),
+      );
+      setState(() {
+        _selectedPestType = null;
+      });
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Gagal dikirim!')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1852,7 +1956,7 @@ class _LaporHamaModuleState extends State<LaporHamaModule> {
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: _selectedPestType != null ? () {} : null,
+            onPressed: (_selectedPestType != null && !_isLoading) ? _submitReport : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.riceGreen,
               foregroundColor: Colors.white,
@@ -1861,10 +1965,16 @@ class _LaporHamaModuleState extends State<LaporHamaModule> {
                 borderRadius: BorderRadius.circular(18),
               ),
             ),
-            child: const Text(
-              'Kirim Laporan',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : const Text(
+                    'Kirim Laporan',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
           ),
         ),
         const SizedBox(height: 24),
@@ -2453,8 +2563,30 @@ class PengaturanModule extends StatelessWidget {
   }
 }
 
-class MenuModule extends StatelessWidget {
+class MenuModule extends StatefulWidget {
   const MenuModule({super.key});
+
+  @override
+  State<MenuModule> createState() => _MenuModuleState();
+}
+
+class _MenuModuleState extends State<MenuModule> {
+  String _userName = 'Memuat...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final name = await ApiService.getUserName();
+    if (mounted) {
+      setState(() {
+        _userName = name ?? 'Profil Pengguna';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2491,9 +2623,9 @@ class MenuModule extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Profil Pengguna',
-                      style: TextStyle(
+                    Text(
+                      _userName,
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,

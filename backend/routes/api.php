@@ -23,6 +23,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// Authentication Routes
+Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+
 // Mobile App API Routes
 Route::middleware('auth:sanctum')->group(function () {
     // Planting routes

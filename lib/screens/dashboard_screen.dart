@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
+import '../utils/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -1665,6 +1666,7 @@ class LaporHamaModule extends StatefulWidget {
 
 class _LaporHamaModuleState extends State<LaporHamaModule> {
   String? _selectedPestType;
+  bool _isLoading = false;
   final List<String> _pestTypes = [
     'Wereng',
     'Walang Sangit',
@@ -1673,6 +1675,46 @@ class _LaporHamaModuleState extends State<LaporHamaModule> {
     'Penyakit Blas',
     'Lainnya',
   ];
+
+  Future<void> _submitReport() async {
+    if (_selectedPestType == null) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Pest Report Payload matching PestReportController
+    final data = {
+      'pest_type': _selectedPestType,
+      'severity': 'medium', // Default for now
+      'report_date': DateTime.now().toIso8601String().split('T')[0],
+      'description': 'Dilaporkan dari aplikasi mobile (GPS Lokasi Aktif).',
+      // 'planting_id' might be required by backend validation, ideally we fetch plantings first.
+      // But we will send it and let the controller handle it if possible.
+      'planting_id': 1 // Dummy ID, usually we should let the user select their planting.
+    };
+
+    final result = await ApiService.submitPestReport(data);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Berhasil dikirim!')),
+      );
+      setState(() {
+        _selectedPestType = null;
+      });
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Gagal dikirim!')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1735,7 +1777,7 @@ class _LaporHamaModuleState extends State<LaporHamaModule> {
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: _selectedPestType != null ? () {} : null,
+            onPressed: (_selectedPestType != null && !_isLoading) ? _submitReport : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.riceGreen,
               foregroundColor: Colors.white,
@@ -1744,10 +1786,16 @@ class _LaporHamaModuleState extends State<LaporHamaModule> {
                 borderRadius: BorderRadius.circular(18),
               ),
             ),
-            child: const Text(
-              'Kirim Laporan',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : const Text(
+                    'Kirim Laporan',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
           ),
         ),
         const SizedBox(height: 24),
