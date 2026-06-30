@@ -1,8 +1,38 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 
-class PengaturanProfilScreen extends StatelessWidget {
+import '../../utils/api_service.dart';
+
+class PengaturanProfilScreen extends StatefulWidget {
   const PengaturanProfilScreen({super.key});
+
+  @override
+  State<PengaturanProfilScreen> createState() => _PengaturanProfilScreenState();
+}
+
+class _PengaturanProfilScreenState extends State<PengaturanProfilScreen> {
+  String _userName = 'Memuat...';
+  String _userEmail = '-';
+  String _userPhone = '-';
+  String _userLocation = '-';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    final profile = await ApiService.getUserProfile();
+    if (mounted) {
+      setState(() {
+        _userName = profile['name'] ?? 'Profil Pengguna';
+        _userEmail = profile['email'] ?? '-';
+        _userPhone = profile['phone'] ?? '-';
+        _userLocation = profile['location'] ?? '-';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,25 +56,25 @@ class PengaturanProfilScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildFieldCard(
                 label: 'Nama Lengkap',
-                value: 'Pak Udin',
+                value: _userName,
                 icon: Icons.person,
               ),
               const SizedBox(height: 12),
               _buildFieldCard(
                 label: 'Nomor Telepon',
-                value: '+62 812-3456-7890',
+                value: _userPhone,
                 icon: Icons.phone,
               ),
               const SizedBox(height: 12),
               _buildFieldCard(
                 label: 'Alamat Email',
-                value: 'pakudin@email.com',
+                value: _userEmail,
                 icon: Icons.email,
               ),
               const SizedBox(height: 12),
               _buildFieldCard(
                 label: 'Lokasi Lahan',
-                value: 'Karawang, Jawa Barat',
+                value: _userLocation,
                 icon: Icons.location_on,
               ),
               const SizedBox(height: 24),
@@ -137,7 +167,7 @@ class PengaturanProfilScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Pak Udin',
+            _userName,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,

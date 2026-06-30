@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/api_service.dart';
 
 class InputJadwalTanamScreen extends StatefulWidget {
   const InputJadwalTanamScreen({super.key});
@@ -10,6 +11,7 @@ class InputJadwalTanamScreen extends StatefulWidget {
 
 class _InputJadwalTanamScreenState extends State<InputJadwalTanamScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   final List<String> _lahanOptions = const [
     'Lahan A (1 Ha)',
@@ -95,19 +97,48 @@ class _InputJadwalTanamScreenState extends State<InputJadwalTanamScreen> {
     );
   }
 
-  void _onSimpan() {
+  Future<void> _onSimpan() async {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
     _formKey.currentState?.save();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Jadwal tanam berhasil disimpan (placeholder).'),
-      ),
-    );
+    setState(() {
+      _isLoading = true;
+    });
 
-    Navigator.pop(context);
+    // We can infer location_name and area from the dropdown or manual input.
+    // Assuming we just send basic data for now since Lahan isn't fully structured in UI.
+    final data = {
+      'location_name': _selectedLahan ?? 'Lahan Baru',
+      'area_hectares': 1.0, // Default for now
+      'planting_date': _tanggalController.text,
+      // Add 90 days for expected harvest if not set
+      'expected_harvest_date': _selectedTanggalTanam != null 
+          ? _formatTanggal(_selectedTanggalTanam!.add(const Duration(days: 90)))
+          : null,
+      'rice_variety': _varietasController.text,
+      'notes': 'Metode: ${_selectedMetode ?? "Lainnya"}',
+    };
+
+    final result = await ApiService.submitPlanting(data);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Berhasil disimpan!')),
+      );
+      Navigator.pop(context);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Gagal disimpan!')),
+      );
+    }
   }
 
   @override
@@ -264,19 +295,26 @@ class _InputJadwalTanamScreenState extends State<InputJadwalTanamScreen> {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: _onSimpan,
+                    onPressed: _isLoading ? null : _onSimpan,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.riceGreen,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text(
-                      'SIMPAN',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
+                    child: _isLoading 
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text('Simpan Jadwal Tanam'),
                   ),
                 ),
               ),

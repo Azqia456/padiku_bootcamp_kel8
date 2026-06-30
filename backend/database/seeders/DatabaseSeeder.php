@@ -24,15 +24,35 @@ class DatabaseSeeder extends Seeder
             'district' => 'Karawang',
         ]);
 
-        // Create test farmer user
+        // Create test farmer users based on requested data
         User::create([
-            'name' => 'Petani Test',
-            'email' => 'petani@test.com',
+            'name' => 'Budi Santoso',
+            'email' => 'budi.cikampek@padiku.test',
             'password' => bcrypt('petani123'),
             'user_type' => 'petani',
             'phone' => '081234567891',
-            'address' => 'Desa Test, Kecamatan Test',
-            'district' => 'Telukjambe',
+            'address' => 'Cikampek Pusaka',
+            'district' => 'Cikampek',
+        ]);
+
+        User::create([
+            'name' => 'Siti Rahayu',
+            'email' => 'siti.cikampek@padiku.test',
+            'password' => bcrypt('petani123'),
+            'user_type' => 'petani',
+            'phone' => '081234567892',
+            'address' => 'Cikampek Pusaka',
+            'district' => 'Cikampek',
+        ]);
+
+        User::create([
+            'name' => 'Ahmad Fauzi',
+            'email' => 'ahmad.cikampek@padiku.test',
+            'password' => bcrypt('petani123'),
+            'user_type' => 'petani',
+            'phone' => '081234567893',
+            'address' => 'Cikampek Pusaka',
+            'district' => 'Cikampek',
         ]);
     }
 }

@@ -3,8 +3,40 @@ import '../dashboard_screen.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/routes.dart';
 
-class ProfilScreen extends StatelessWidget {
+import '../../utils/api_service.dart';
+
+class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
+
+  @override
+  State<ProfilScreen> createState() => _ProfilScreenState();
+}
+
+class _ProfilScreenState extends State<ProfilScreen> {
+  String _userName = 'Memuat...';
+  String _userPhone = '-';
+  String _userLocation = '-';
+  String _totalLaporan = '0';
+  String _lahanAktif = '0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    final profile = await ApiService.getUserProfile();
+    if (mounted) {
+      setState(() {
+        _userName = profile['name'] ?? 'Profil Pengguna';
+        _userPhone = profile['phone'] ?? '-';
+        _userLocation = profile['location'] ?? '-';
+        _totalLaporan = profile['total_laporan'] ?? '0';
+        _lahanAktif = profile['lahan_aktif'] ?? '0';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +121,7 @@ class ProfilScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10), // <-- Jarak sedikit dirapatkan
                     Text(
-                      'Pak Udin',
+                      _userName,
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -126,11 +158,11 @@ class ProfilScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _buildStatCard('Total Laporan', '12'),
+                      child: _buildStatCard('Total Laporan', _totalLaporan),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildStatCard('Lahan Aktif', '27 Ha'),
+                      child: _buildStatCard('Lahan Aktif', '$_lahanAktif Ha'),
                     ),
                   ],
                 ),
@@ -171,9 +203,9 @@ class ProfilScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildInfoItem('Nama Lengkap', 'Pak Udin'),
-                    _buildInfoItem('Nomor Telepon', '+62 812-3456-7890'),
-                    _buildInfoItem('Lokasi Lahan', 'Karawang, Jawa Barat'),
+                    _buildInfoItem('Nama Lengkap', _userName),
+                    _buildInfoItem('Nomor Telepon', _userPhone),
+                    _buildInfoItem('Lokasi Lahan', _userLocation),
                   ],
                 ),
               ),
