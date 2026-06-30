@@ -28,19 +28,79 @@ class PlantingController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $user = Auth::user();
+        $plantingDate = \Carbon\Carbon::parse($validated['planting_date']);
+        $district = $user->district ?? 'Cikampek';
+
+        $conflicts = Planting::whereHas('user', function($q) use ($district) {
+                $q->where('district', $district);
+            })
+            ->whereBetween('planting_date', [
+                $plantingDate->copy()->subDays(7), 
+                $plantingDate->copy()->addDays(7)
+            ])
+            ->count();
+
+        if ($conflicts >= 1) {
+            return response()->json([
+                'message' => 'Gagal menyimpan: Potensi panen serempak (' . $conflicts . ' lahan) di Kec. ' . $district . ' pada minggu ini. Silakan geser tanggal tanam Anda.'
+            ], 422);
+        }
+
         $planting = Planting::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'location_name' => $validated['location_name'],
             'latitude' => $validated['latitude'],
             'longitude' => $validated['longitude'],
             'area_hectares' => $validated['area_hectares'],
             'planting_date' => $validated['planting_date'],
             'rice_variety' => $validated['rice_variety'],
-            'expected_harvest_date' => $validated['expected_harvest_date'] ?? null,
+            'expected_harvest_date' => $validated['expected_harvest_date'] ?? $plantingDate->copy()->addDays(90)->format('Y-m-d'),
             'notes' => $validated['notes'] ?? null,
         ]);
 
         return response()->json($planting, 201);
+    }
+
+    public function checkConflict(Request $request)
+    {
+        $request->validate([
+            'planting_date' => 'required|date'
+        ]);
+
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['conflict' => false]);
+        }
+
+        $plantingDate = \Carbon\Carbon::parse($request->planting_date);
+        $district = $user->district ?? 'Cikampek';
+
+        $conflicts = Planting::whereHas('user', function($q) use ($district) {
+                $q->where('district', $district);
+            })
+            ->whereBetween('planting_date', [
+                $plantingDate->copy()->subDays(7), 
+                $plantingDate->copy()->addDays(7)
+            ])
+            ->count();
+
+        if ($conflicts >= 1) {
+            return response()->json([
+                'conflict' => true,
+                'message' => '⚠️ Gagal: Terdapat potensi panen serempak (' . $conflicts . ' lahan) di Kec. ' . $district . ' pada minggu ini. Silakan geser tanggal tanam Anda.',
+                'recommendation_date' => $plantingDate->copy()->addDays(7)->format('Y-m-d')
+            ]);
+        }
+
+        // Expected harvest date is 90 days from planting date
+        $expectedHarvestDate = $plantingDate->copy()->addDays(90)->format('Y-m-d');
+
+        return response()->json([
+            'conflict' => false,
+            'expected_harvest_date' => $expectedHarvestDate,
+            'message' => '✅ Aman: Tidak ada konflik penanaman di Kec. ' . $district . ' pada minggu ini. Anda diperbolehkan menanam.'
+        ]);
     }
 
     public function show(string $id)

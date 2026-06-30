@@ -205,28 +205,21 @@
                 }
             }
 
-            // Cikampek Pusaka wajib Hijau (Aman) untuk awal demo
-            if (nameNorm === 'cikampekpusaka') {
+            // Cikampek Pusaka wajib Hijau (Aman) untuk awal demo jika count = 0
+            if (nameNorm === 'cikampekpusaka' && count === 0) {
                 return { color: '#00B159', name: 'Aman', count: count };
             }
 
-            // List status/warna
-            const statuses = [
-                { color: '#D11141', name: 'Sangat Tinggi' },
-                { color: '#F37735', name: 'Tinggi' },
-                { color: '#FFC425', name: 'Waspada' },
-                { color: '#00B159', name: 'Aman' }
-            ];
-
-            // Gunakan simple hash string agar warna per desa konsisten/tidak berubah-ubah setiap reload
-            let hash = 0;
-            for (let i = 0; i < nameNorm.length; i++) {
-                hash = nameNorm.charCodeAt(i) + ((hash << 5) - hash);
+            // Tentukan status dan warna secara dinamis berdasarkan jumlah pelapor
+            if (count < 3) {
+                return { color: '#00B159', name: 'Aman', count: count };
+            } else if (count >= 3 && count < 6) {
+                return { color: '#FFC425', name: 'Waspada', count: count };
+            } else if (count >= 6 && count < 10) {
+                return { color: '#F37735', name: 'Tinggi', count: count };
+            } else {
+                return { color: '#D11141', name: 'Sangat Tinggi', count: count };
             }
-            const index = Math.abs(hash) % statuses.length;
-            const status = statuses[index];
-
-            return { color: status.color, name: status.name, count: count };
         }
 
         // Memuat file GeoJSON

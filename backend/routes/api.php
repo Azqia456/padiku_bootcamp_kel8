@@ -29,7 +29,10 @@ Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'regi
 
 // Mobile App API Routes
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/user/update-password', [\App\Http\Controllers\Api\AuthController::class, 'updatePassword']);
+    
     // Planting routes
+    Route::post('plantings/check-conflict', [PlantingController::class, 'checkConflict']);
     Route::apiResource('plantings', PlantingController::class);
     
     // Pest Report routes

@@ -223,7 +223,7 @@ class DashboardController extends Controller
                 SUM(plantings.area_hectares) as total_area,
                 SUM(plantings.area_hectares * 5) as estimated_yield,
                 AVG(DATEDIFF(NOW(), plantings.planting_date) / 30) as avg_age_months,
-                (SELECT status FROM plantings p2
+                (SELECT p2.status FROM plantings p2
                     JOIN users u2 ON p2.user_id = u2.id
                     WHERE u2.district = users.district
                     GROUP BY p2.status ORDER BY COUNT(*) DESC LIMIT 1
@@ -281,7 +281,6 @@ class DashboardController extends Controller
     public function farmers(Request $request)
     {
         $query = User::where('user_type', 'petani')
-            ->where('status', 'approved')
             ->with(['plantings'])
             ->withSum('plantings', 'area_hectares');
 
@@ -289,16 +288,13 @@ class DashboardController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $farmers = $query->orderBy('name')->get();
-        $totalFarmersCount = User::where('user_type', 'petani')->where('status', 'approved')->count();
-
-        // Ambil data petani yang menunggu persetujuan (pending)
-        $pendingFarmers = User::where('user_type', 'petani')
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
+        $farmers = $query->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
+            ->orderBy('name')
             ->get();
 
-        return view('dashboard.farmers', compact('farmers', 'totalFarmersCount', 'pendingFarmers'));
+        $totalFarmersCount = User::where('user_type', 'petani')->count();
+
+        return view('dashboard.farmers', compact('farmers', 'totalFarmersCount'));
     }
 
     public function approveFarmer($id)

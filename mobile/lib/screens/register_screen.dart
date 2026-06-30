@@ -22,7 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _alamatController = TextEditingController();
-  final _kecamatanController = TextEditingController();
+  final _desaController = TextEditingController();
   final _passwordController = TextEditingController();
 
   // Variabel untuk menyimpan file upload
@@ -35,7 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _alamatController.dispose();
-    _kecamatanController.dispose();
+    _desaController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -51,7 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text,
       phone: _phoneController.text,
       address: _alamatController.text,
-      district: _kecamatanController.text,
+      village: _desaController.text,
       profilePhoto: _fotoDiri,
       documentFile: _fotoBerkas,
     );
@@ -289,16 +289,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // 7. Input Kecamatan 
+                // 7. Input Desa 
                 const Text(
-                  'Kecamatan',
+                  'Desa',
                   style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  controller: _kecamatanController,
+                  controller: _desaController,
                   decoration: InputDecoration(
-                    hintText: 'Masukkan nama kecamatan',
+                    hintText: 'Masukkan nama desa',
                     hintStyle: const TextStyle(color: Colors.grey),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(

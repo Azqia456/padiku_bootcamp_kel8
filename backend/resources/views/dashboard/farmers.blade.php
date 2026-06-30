@@ -11,76 +11,7 @@
 
 <x-page-banner title="Manajemen Petani" subtitle="Kelola data petani terdaftar di wilayah Karawang" image="Farmers harvesting rice in Vietnam_.jpeg" />
 
-@if($pendingFarmers->count() > 0)
-    <!-- Section: Permintaan Persetujuan -->
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 border border-slate-100 mb-8 border-l-4 border-yellow-500">
-        <div class="mb-4">
-            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse"></span>
-                Permintaan Persetujuan Pendaftaran ({{ $pendingFarmers->count() }})
-            </h2>
-            <p class="text-sm text-slate-500 font-medium">Akun petani baru yang memerlukan peninjauan berkas</p>
-        </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-100">
-                    <tr>
-                        <th class="px-6 py-4 text-left">Nama</th>
-                        <th class="px-6 py-4 text-left">Email</th>
-                        <th class="px-6 py-4 text-left">Telepon</th>
-                        <th class="px-6 py-4 text-left">Kecamatan</th>
-                        <th class="px-6 py-4 text-left">Foto Diri</th>
-                        <th class="px-6 py-4 text-left">Berkas Pendukung</th>
-                        <th class="px-6 py-4 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($pendingFarmers as $pending)
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4 font-semibold text-slate-800">{{ $pending->name }}</td>
-                        <td class="px-6 py-4 text-slate-600">{{ $pending->email }}</td>
-                        <td class="px-6 py-4 text-slate-600">{{ $pending->phone }}</td>
-                        <td class="px-6 py-4 text-slate-500 font-medium">{{ $pending->district }}</td>
-                        <td class="px-6 py-4">
-                            @if($pending->profile_photo_path)
-                                <a href="{{ asset('storage/' . $pending->profile_photo_path) }}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-semibold underline flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    Lihat Foto
-                                </a>
-                            @else
-                                <span class="text-slate-400">Tidak ada</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($pending->document_path)
-                                <a href="{{ asset('storage/' . $pending->document_path) }}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-semibold underline flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    Lihat Berkas
-                                </a>
-                            @else
-                                <span class="text-slate-400">Tidak ada</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex justify-center items-center gap-2">
-                                <form action="{{ route('dashboard.farmers.approve', $pending->id) }}" method="POST" onsubmit="return confirm('Setujui pendaftaran petani ini?')">
-                                    @csrf
-                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg transition text-xs font-semibold">Setujui (ACC)</button>
-                                </form>
-                                <form action="{{ route('dashboard.farmers.reject', $pending->id) }}" method="POST" onsubmit="return confirm('Tolak pendaftaran petani ini?')">
-                                    @csrf
-                                    <button type="submit" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Tolak</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-@endif
 
 <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 border border-slate-100">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-2">
@@ -101,7 +32,7 @@
                 <th class="px-6 py-4 text-left">Nama</th>
                 <th class="px-6 py-4 text-left">Email</th>
                 <th class="px-6 py-4 text-left">Telepon</th>
-                <th class="px-6 py-4 text-left">Kecamatan</th>
+                <th class="px-6 py-4 text-left">Desa</th>
                 <th class="px-6 py-4 text-left">Lahan</th>
                 <th class="px-6 py-4 text-left">Status</th>
                 <th class="px-6 py-4 text-center">Aksi</th>
@@ -113,6 +44,70 @@
             @endforeach
         </tbody>
     </table>
+</div>
+
+<!-- Modal Perizinan & Berkas -->
+<div id="modalPerizinan" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold flex items-center gap-2 text-slate-800">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                Perizinan & Berkas Petani
+            </h2>
+            <button type="button" onclick="toggleModal('modalPerizinan', false)" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 block uppercase">Nama Petani</span>
+                <span id="perizinan_name" class="text-base font-bold text-slate-800">-</span>
+            </div>
+            <div>
+                <span class="text-xs font-semibold text-slate-400 block uppercase">Desa</span>
+                <span id="perizinan_village" class="text-sm font-medium text-slate-700">-</span>
+            </div>
+            <div>
+                <span class="text-xs font-semibold text-slate-400 block uppercase">Status</span>
+                <span id="perizinan_status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1">-</span>
+            </div>
+            
+            <div class="border-t border-slate-100 pt-4">
+                <h3 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">Berkas Pendaftaran</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-xs font-medium text-slate-500 block mb-2">Foto Diri</span>
+                        <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50 aspect-video flex items-center justify-center relative group">
+                            <img id="perizinan_photo_img" src="" alt="Foto Diri" class="w-full h-full object-cover hidden">
+                            <span id="perizinan_photo_none" class="text-xs text-slate-400">Tidak ada</span>
+                            <a id="perizinan_photo_link" href="#" target="_blank" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold rounded-lg">Buka File</a>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-medium text-slate-500 block mb-2">Berkas Pendukung</span>
+                        <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50 aspect-video flex items-center justify-center relative group">
+                            <img id="perizinan_doc_img" src="" alt="Berkas Pendukung" class="w-full h-full object-cover hidden">
+                            <span id="perizinan_doc_none" class="text-xs text-slate-400">Tidak ada</span>
+                            <a id="perizinan_doc_link" href="#" target="_blank" class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold rounded-lg">Buka File</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions Block -->
+            <div id="perizinan_actions" class="border-t border-slate-100 pt-4 flex gap-3 justify-end hidden">
+                <form id="perizinan_reject_form" method="POST">
+                    @csrf
+                    <button type="submit" class="px-5 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold hover:bg-red-100 transition text-sm">Tolak</button>
+                </form>
+                <form id="perizinan_approve_form" method="POST">
+                    @csrf
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 text-white rounded-full font-bold hover:bg-emerald-700 transition text-sm">Setujui (ACC)</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="modalEdit" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -218,22 +213,118 @@
         }
     }
 
-    function getStatusClass(status) {
-        if (status === 'persiapan') return 'bg-yellow-100 text-yellow-700';
-        if (status === 'harvested') return 'bg-blue-100 text-blue-700';
-        return 'bg-green-100 text-green-700';
+    function openPerizinanModalById(farmerId) {
+        const farmer = allFarmers.find(f => f.id === farmerId);
+        if (farmer) {
+            openPerizinanModal(farmer);
+        }
     }
 
-    function getStatusText(status) {
+    function openPerizinanModal(farmer) {
+        document.getElementById('perizinan_name').textContent = farmer.name;
+        document.getElementById('perizinan_village').textContent = farmer.village || '-';
+        
+        const statusBadge = document.getElementById('perizinan_status');
+        statusBadge.textContent = getStatusLabelText(farmer.status);
+        statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusBadgeClass(farmer.status) + ' mt-1';
+        
+        // Foto Diri
+        const photoImg = document.getElementById('perizinan_photo_img');
+        const photoNone = document.getElementById('perizinan_photo_none');
+        const photoLink = document.getElementById('perizinan_photo_link');
+        
+        if (farmer.profile_photo_path) {
+            photoImg.src = `/storage/${farmer.profile_photo_path}`;
+            photoImg.classList.remove('hidden');
+            photoNone.classList.add('hidden');
+            photoLink.href = `/storage/${farmer.profile_photo_path}`;
+            photoLink.classList.remove('hidden');
+        } else {
+            photoImg.classList.add('hidden');
+            photoNone.classList.remove('hidden');
+            photoLink.classList.add('hidden');
+        }
+        
+        // Berkas Pendukung
+        const docImg = document.getElementById('perizinan_doc_img');
+        const docNone = document.getElementById('perizinan_doc_none');
+        const docLink = document.getElementById('perizinan_doc_link');
+        
+        if (farmer.document_path) {
+            const parts = farmer.document_path.split('.');
+            const ext = parts[parts.length - 1] || '';
+            const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(ext.toLowerCase());
+            
+            if (isImage) {
+                docImg.src = `/storage/${farmer.document_path}`;
+                docImg.classList.remove('hidden');
+            } else {
+                docImg.classList.add('hidden');
+            }
+            docNone.classList.add('hidden');
+            docLink.href = `/storage/${farmer.document_path}`;
+            docLink.classList.remove('hidden');
+        } else {
+            docImg.classList.add('hidden');
+            docNone.classList.remove('hidden');
+            docLink.classList.add('hidden');
+        }
+        
+        // Actions
+        const actionsDiv = document.getElementById('perizinan_actions');
+        if (farmer.status === 'pending') {
+            actionsDiv.classList.remove('hidden');
+            document.getElementById('perizinan_approve_form').action = `/dashboard/farmers/${farmer.id}/approve`;
+            document.getElementById('perizinan_reject_form').action = `/dashboard/farmers/${farmer.id}/reject`;
+        } else {
+            actionsDiv.classList.add('hidden');
+        }
+        
+        toggleModal('modalPerizinan', true);
+    }
+    
+    function getStatusLabelText(status) {
+        if (status === 'pending') return 'Menunggu Persetujuan';
+        if (status === 'rejected') return 'Ditolak';
+        return 'Disetujui';
+    }
+    
+    function getStatusBadgeClass(status) {
+        if (status === 'pending') return 'bg-amber-100 text-amber-800 border border-amber-200';
+        if (status === 'rejected') return 'bg-red-100 text-red-800 border border-red-200';
+        return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+    }
+
+    function getFarmerStatusClass(farmer) {
+        if (farmer.status === 'pending') return 'bg-amber-100 text-amber-700 border-amber-200';
+        if (farmer.status === 'rejected') return 'bg-red-100 text-red-700 border-red-200';
+        
+        const planting = farmer.plantings && farmer.plantings.length > 0 ? farmer.plantings[0] : null;
+        const status = planting ? planting.status : 'planted';
+        if (status === 'persiapan') return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        if (status === 'harvested') return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-green-100 text-green-700 border-green-200';
+    }
+
+    function getFarmerStatusText(farmer) {
+        if (farmer.status === 'pending') return 'Menunggu Persetujuan';
+        if (farmer.status === 'rejected') return 'Ditolak';
+        
+        const planting = farmer.plantings && farmer.plantings.length > 0 ? farmer.plantings[0] : null;
+        const status = planting ? planting.status : 'planted';
         if (status === 'persiapan') return 'Persiapan';
         if (status === 'harvested') return 'Sudah Panen';
         return 'Aktif Tanam';
     }
 
+    function getStatusDotColor(status) {
+        if (status === 'pending') return 'bg-amber-500';
+        if (status === 'rejected') return 'bg-red-500';
+        return 'bg-emerald-500';
+    }
+
     function renderFarmerRow(farmer) {
-        const planting = farmer.plantings && farmer.plantings.length > 0 ? farmer.plantings[0] : null;
         const area = farmer.plantings_sum_area_hectares || 0;
-        const status = planting ? planting.status : 'planted';
 
         let photoHtml = '';
         if (farmer.profile_photo_path) {
@@ -243,7 +334,7 @@
         }
 
         return `
-            <tr class="farmer-row hover:bg-slate-50/50 transition-colors" data-name="${farmer.name.toLowerCase()}" data-district="${farmer.district.toLowerCase()}" data-id="${farmer.id}">
+            <tr class="farmer-row hover:bg-slate-50/50 transition-colors" data-name="${farmer.name.toLowerCase()}" data-district="${(farmer.village || '').toLowerCase()}" data-id="${farmer.id}">
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         ${photoHtml}
@@ -252,18 +343,24 @@
                 </td>
                 <td class="px-6 py-4 text-slate-600">${farmer.email}</td>
                 <td class="px-6 py-4 text-slate-600">${farmer.phone}</td>
-                <td class="px-6 py-4 text-slate-500 font-medium">${farmer.district}</td>
+                <td class="px-6 py-4 text-slate-500 font-medium">${farmer.village || '-'}</td>
                 <td class="px-6 py-4 font-bold text-emerald-800">${area} Ha</td>
                 <td class="px-6 py-4">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(status)} border border-emerald-100">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        ${getStatusText(status)}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getFarmerStatusClass(farmer)} border whitespace-nowrap">
+                        <span class="w-1.5 h-1.5 rounded-full ${getStatusDotColor(farmer.status)}"></span>
+                        ${getFarmerStatusText(farmer)}
                     </span>
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex justify-center items-center gap-2">
-                        <button onclick="openEditModal(${farmer.id})" class="bg-orange-50 text-orange-600 px-3.5 py-1.5 rounded-lg border border-orange-200 hover:bg-orange-100 transition text-xs font-semibold">Edit</button>
-                        <button onclick="deleteFarmer(event, ${farmer.id})" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
+                        ${farmer.status === 'pending' ? `
+                            <button onclick="openPerizinanModalById(${farmer.id})" class="bg-emerald-50 text-emerald-600 px-3.5 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition text-xs font-semibold">Perizinan</button>
+                        ` : (farmer.status === 'rejected' ? `
+                            <button onclick="deleteFarmer(event, ${farmer.id})" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
+                        ` : `
+                            <button onclick="openEditModal(${farmer.id})" class="bg-orange-50 text-orange-600 px-3.5 py-1.5 rounded-lg border border-orange-200 hover:bg-orange-100 transition text-xs font-semibold">Edit</button>
+                            <button onclick="deleteFarmer(event, ${farmer.id})" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
+                        `)}
                     </div>
                 </td>
             </tr>

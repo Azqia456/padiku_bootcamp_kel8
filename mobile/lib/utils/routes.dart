@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/login_screen.dart';
 import '../screens/dashboard_screen.dart';
-import '../screens/data_lahan/daftar_lahan_screen.dart';
-import '../screens/data_lahan/tambah_lahan_screen.dart';
-import '../screens/data_lahan/detail_lahan_screen.dart';
-import '../screens/data_lahan/peta_sebaran_lahan_screen.dart';
 import '../screens/jadwal_tanam/input_jadwal_screen.dart';
 import '../screens/jadwal_tanam/kalender_tanam_screen.dart';
 import '../screens/jadwal_tanam/monitoring_fase_screen.dart';
@@ -42,12 +38,6 @@ class Routes {
   static const String login = '/login';
   static const String register = '/register';
   static const String dashboard = '/dashboard';
-  
-  // Data Lahan
-  static const String daftarLahan = '/data-lahan/daftar';
-  static const String tambahLahan = '/data-lahan/tambah';
-  static const String detailLahan = '/data-lahan/detail';
-  static const String petaSebaranLahan = '/data-lahan/peta';
   
   // Jadwal Tanam
   static const String inputJadwalTanam = '/jadwal-tanam/input';
@@ -99,12 +89,6 @@ class Routes {
       login: (context) => const LoginScreen(),
       register: (context) => const RegisterScreen(),
       dashboard: (context) => const DashboardScreen(),
-      
-      // Data Lahan
-      daftarLahan: (context) => const DaftarLahanScreen(),
-      tambahLahan: (context) => const TambahLahanScreen(),
-      detailLahan: (context) => const DetailLahanScreen(),
-      petaSebaranLahan: (context) => const PetaSebaranLahanScreen(),
       
       // Jadwal Tanam
       inputJadwalTanam: (context) => const InputJadwalTanamScreen(),

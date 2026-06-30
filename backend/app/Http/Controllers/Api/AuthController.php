@@ -70,7 +70,8 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'phone' => 'required|string|max:20',
             'address' => 'required|string',
-            'district' => 'required|string|max:100',
+            'district' => 'nullable|string|max:100',
+            'village' => 'required|string|max:100',
             'profile_photo' => 'nullable|image|max:4096',
             'document_file' => 'nullable|file|max:10240', // Max 10MB document
         ]);
@@ -91,7 +92,8 @@ class AuthController extends Controller
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
             'phone' => $request->phone,
             'address' => $request->address,
-            'district' => $request->district,
+            'district' => $request->district ?? 'Karawang',
+            'village' => $request->village,
             'profile_photo_path' => $photoPath,
             'document_path' => $documentPath,
             'user_type' => 'petani',
@@ -105,5 +107,21 @@ class AuthController extends Controller
                 'user' => $user
             ]
         ], 201);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'new_password' => 'required|string|min:8',
+        ]);
+
+        $user = $request->user();
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kata sandi berhasil diperbarui.'
+        ]);
     }
 }

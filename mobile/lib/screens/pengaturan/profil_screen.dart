@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../dashboard_screen.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/routes.dart';
-
 import '../../utils/api_service.dart';
 
 class ProfilScreen extends StatefulWidget {
@@ -14,10 +14,18 @@ class ProfilScreen extends StatefulWidget {
 
 class _ProfilScreenState extends State<ProfilScreen> {
   String _userName = 'Memuat...';
+  String _userEmail = '-';
   String _userPhone = '-';
   String _userLocation = '-';
-  String _totalLaporan = '0';
-  String _lahanAktif = '0';
+  String? _profilePhotoPath;
+  String _userPassword = '••••••••';
+
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -25,325 +33,443 @@ class _ProfilScreenState extends State<ProfilScreen> {
     _loadProfileData();
   }
 
+  @override
+  void dispose() {
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadProfileData() async {
     final profile = await ApiService.getUserProfile();
+    final prefs = await SharedPreferences.getInstance();
+    final localPassword = prefs.getString('user_password') ?? '••••••••';
+
     if (mounted) {
       setState(() {
         _userName = profile['name'] ?? 'Profil Pengguna';
+        _userEmail = profile['email'] ?? '-';
         _userPhone = profile['phone'] ?? '-';
         _userLocation = profile['location'] ?? '-';
-        _totalLaporan = profile['total_laporan'] ?? '0';
-        _lahanAktif = profile['lahan_aktif'] ?? '0';
+        _profilePhotoPath = profile['profile_photo_path'];
+        _userPassword = localPassword;
       });
     }
+  }
+
+  Future<void> _saveChanges() async {
+    if (_newPasswordController.text.isNotEmpty ||
+        _confirmPasswordController.text.isNotEmpty) {
+      if (_newPasswordController.text.length < 8) {
+        _showSnackBar('Kata sandi baru minimal 8 karakter.');
+        return;
+      }
+      if (_newPasswordController.text != _confirmPasswordController.text) {
+        _showSnackBar('Konfirmasi kata sandi baru tidak cocok.');
+        return;
+      }
+      
+      setState(() {
+        _isLoading = true;
+      });
+
+      final result = await ApiService.updatePassword(_newPasswordController.text);
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (result['success'] == true) {
+          _showSuccessDialog('Kata sandi berhasil diperbarui!');
+          setState(() {
+            _userPassword = _newPasswordController.text;
+          });
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+        } else {
+          _showSnackBar(result['message'] ?? 'Gagal memperbarui kata sandi.');
+        }
+      }
+    } else {
+      _showSnackBar('Tidak ada kata sandi baru yang diisi.');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: AppColors.riceGreen,
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.riceGreen),
+            SizedBox(width: 8),
+            Text('Berhasil'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK', style: TextStyle(color: AppColors.riceGreen)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surfaceColor,
-      appBar: AppBar(
-        backgroundColor: AppColors.riceGreen,
-        foregroundColor: AppColors.riceWhite,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Akun',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: EdgeInsets.zero,
+      body: Column(
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                height: 260,
-                decoration: BoxDecoration(
-                  gradient: AppColors.riceGradient,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'PADIKU',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.riceWhite,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.riceWhite.withAlpha(24),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.settings, size: 20),
-                        color: AppColors.riceWhite,
-                        onPressed: () {},
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 24, // <-- Diubah dari 44 menjadi 24 agar elemen naik ke atas
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 46,
-                      backgroundColor: Colors.white.withAlpha(25),
-                      child: const CircleAvatar(
-                        radius: 38,
-                        backgroundColor: AppColors.riceWhite,
-                        child: Icon(
-                          Icons.person,
-                          size: 44,
-                          color: AppColors.riceGreen,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10), // <-- Jarak sedikit dirapatkan
-                    Text(
-                      _userName,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.riceWhite,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.riceWhite.withAlpha(28),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'PETANI MANDIRI',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.riceWhite.withAlpha(210),
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                bottom: -44,
-                left: 16,
-                right: 16,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard('Total Laporan', _totalLaporan),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard('Lahan Aktif', '$_lahanAktif Ha'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 64),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          _buildTopHeader(context),
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.riceGreen),
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'Informasi Personal',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        _buildHeaderCard(),
+                        const SizedBox(height: 20),
+                        
+                        // Informasi Personal Card
+                        Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          elevation: 1,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.person_rounded,
+                                      color: AppColors.riceGreen,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Informasi Personal',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildInlineReadOnlyField(
+                                  label: 'Nama Lengkap',
+                                  value: _userName,
+                                ),
+                                const Divider(height: 24, color: Color(0xFFE8F5E9)),
+                                _buildInlineReadOnlyField(
+                                  label: 'Nomor Telepon',
+                                  value: _userPhone,
+                                ),
+                                const Divider(height: 24, color: Color(0xFFE8F5E9)),
+                                _buildInlineReadOnlyField(
+                                  label: 'Alamat Email',
+                                  value: _userEmail,
+                                ),
+                                const Divider(height: 24, color: Color(0xFFE8F5E9)),
+                                _buildInlineReadOnlyField(
+                                  label: 'Lokasi Lahan',
+                                  value: _userLocation,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        Icon(
-                          Icons.edit,
-                          color: AppColors.riceGreen,
-                          size: 20,
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Ubah Kata Sandi Card
+                        Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          elevation: 1,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.lock_rounded,
+                                      color: AppColors.riceGreen,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Ubah Kata Sandi',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildInlineReadOnlyField(
+                                  label: 'Kata Sandi Lama',
+                                  value: _userPassword,
+                                ),
+                                const Divider(height: 24, color: Color(0xFFE8F5E9)),
+                                _buildInlineInputField(
+                                  label: 'Kata Sandi Baru',
+                                  controller: _newPasswordController,
+                                  obscureText: _obscureNew,
+                                  onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew),
+                                ),
+                                const Divider(height: 24, color: Color(0xFFE8F5E9)),
+                                _buildInlineInputField(
+                                  label: 'Konfirmasi Kata Sandi Baru',
+                                  controller: _confirmPasswordController,
+                                  obscureText: _obscureConfirm,
+                                  onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Action Buttons Row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    Routes.login,
+                                    (route) => false,
+                                  );
+                                },
+                                icon: const Icon(Icons.logout_rounded, size: 18),
+                                label: const Text(
+                                  'Keluar',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFFEF5350),
+                                  side: const BorderSide(color: Color(0xFFEF5350), width: 1.5),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: _saveChanges,
+                                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                                label: const Text(
+                                  'Simpan',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.riceGreen,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 1,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildInfoItem('Nama Lengkap', _userName),
-                    _buildInfoItem('Nomor Telepon', _userPhone),
-                    _buildInfoItem('Lokasi Lahan', _userLocation),
-                  ],
-                ),
-              ),
-            ),
+                  ),
           ),
-
-          const SizedBox(height: 16),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: Text(
-                        'Menu Akun',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildMenuItem(
-                      icon: Icons.person,
-                      title: 'Pengaturan Profil',
-                      onTap: () => Navigator.pushNamed(context, Routes.pengaturanProfil),
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.security,
-                      title: 'Keamanan Akun',
-                      onTap: () => Navigator.pushNamed(context, Routes.keamananAkun),
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.info,
-                      title: 'Tentang Padiku',
-                      onTap: () => Navigator.pushNamed(context, Routes.tentangPadiku),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.login,
-                  (route) => false,
-                );
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Keluar Akun'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF5350),
-                foregroundColor: AppColors.riceWhite,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
         ],
       ),
       bottomNavigationBar: _buildAccountBottomNav(context),
     );
   }
 
-  Widget _buildStatCard(String label, String value) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+  Widget _buildTopHeader(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.riceGreen,
+      padding: const EdgeInsets.fromLTRB(16, 50, 20, 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo_padi_dashboard.png',
+                    width: 22,
+                    height: 22,
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
+              const SizedBox(width: 10),
+              const Text(
+                'PADIKU',
+                style: TextStyle(
+                  color: Color(0xFF2E7D32),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.support_agent_rounded,
+                  color: Colors.black54,
+                  size: 24,
+                ),
+                tooltip: 'Pusat Bantuan',
+                onPressed: () {
+                  Navigator.pushNamed(context, Routes.pusatBantuan);
+                },
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: Colors.black54,
+                  size: 26,
+                ),
+                tooltip: 'Notifikasi',
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+  Widget _buildHeaderCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: AppColors.riceWhite,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              ClipOval(
+                child: Container(
+                  width: 92,
+                  height: 92,
+                  color: const Color(0xFFE8F5E9),
+                  child: _profilePhotoPath != null
+                      ? Image.network(
+                          '${ApiService.baseUrl.replaceAll('/api', '/storage')}/$_profilePhotoPath',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.person_rounded,
+                              size: 44,
+                              color: AppColors.riceGreen,
+                            );
+                          },
+                        )
+                      : const Icon(
+                          Icons.person_rounded,
+                          size: 44,
+                          color: AppColors.riceGreen,
+                        ),
+                ),
+              ),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.riceGreen,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.riceWhite, width: 2),
+                ),
+                child: const Icon(
+                  Icons.edit,
+                  color: AppColors.riceWhite,
+                  size: 18,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           Text(
-            label,
+            _userName,
             style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
-            value,
+            'Petani Padi • Karawang',
             style: TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -351,60 +477,83 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
+  Widget _buildInlineReadOnlyField({
+    required String label,
+    required String value,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppColors.riceWhite,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(10),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textSecondary,
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color.fromRGBO(10, 92, 52, 0.12),
-                borderRadius: BorderRadius.circular(8),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineInputField({
+    required String label,
+    required TextEditingController controller,
+    required bool obscureText,
+    required VoidCallback onToggleVisibility,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textSecondary,
+                ),
               ),
-              child: Icon(
-                icon,
-                color: AppColors.riceGreen,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
+              TextField(
+                controller: controller,
+                obscureText: obscureText,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 6),
+                  border: InputBorder.none,
+                  hintText: 'Masukkan Kata Sandi Baru',
+                ),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.textSecondary,
-              size: 16,
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+        IconButton(
+          icon: Icon(
+            obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
+          onPressed: onToggleVisibility,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
     );
   }
 
@@ -415,7 +564,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
         color: AppColors.surfaceColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(8),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 18,
             offset: const Offset(0, -6),
           ),
@@ -433,7 +582,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
               border: Border.all(color: Colors.green.shade50),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(13),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),

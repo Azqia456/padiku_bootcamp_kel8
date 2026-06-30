@@ -28,6 +28,8 @@ class User extends Authenticatable
         'district',
         'village',
         'profile_photo_path',
+        'status',
+        'document_path',
     ];
 
     /**

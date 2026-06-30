@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -56,6 +57,7 @@ class ApiService {
       if (response.statusCode == 200 && data['success'] == true) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', data['data']['token']);
+        await prefs.setString('user_password', password);
         await prefs.setInt('user_id', data['data']['user']['id']);
         await prefs.setString('user_name', data['data']['user']['name'] ?? 'Profil Pengguna');
         await prefs.setString('user_email', data['data']['user']['email'] ?? '-');
@@ -82,7 +84,7 @@ class ApiService {
     required String password,
     required String phone,
     required String address,
-    required String district,
+    required String village,
     required XFile? profilePhoto,
     required XFile? documentFile,
   }) async {
@@ -97,23 +99,42 @@ class ApiService {
       request.fields['password'] = password;
       request.fields['phone'] = phone;
       request.fields['address'] = address;
-      request.fields['district'] = district;
+      request.fields['village'] = village;
 
       if (profilePhoto != null) {
         final bytes = await profilePhoto.readAsBytes();
+        final ext = profilePhoto.name.split('.').last.toLowerCase();
+        final mimeType = (ext == 'png') ? 'image/png' : 'image/jpeg';
+        final mediaType = MediaType.parse(mimeType);
+
         request.files.add(http.MultipartFile.fromBytes(
           'profile_photo',
           bytes,
           filename: profilePhoto.name,
+          contentType: mediaType,
         ));
       }
 
       if (documentFile != null) {
         final bytes = await documentFile.readAsBytes();
+        final ext = documentFile.name.split('.').last.toLowerCase();
+        String mimeType;
+        if (ext == 'pdf') {
+          mimeType = 'application/pdf';
+        } else if (ext == 'png') {
+          mimeType = 'image/png';
+        } else if (ext == 'jpg' || ext == 'jpeg') {
+          mimeType = 'image/jpeg';
+        } else {
+          mimeType = 'application/octet-stream';
+        }
+        final mediaType = MediaType.parse(mimeType);
+
         request.files.add(http.MultipartFile.fromBytes(
           'document_file',
           bytes,
           filename: documentFile.name,
+          contentType: mediaType,
         ));
       }
 
@@ -135,6 +156,93 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_id');
+  }
+
+  static Future<Map<String, dynamic>> checkPlantingConflict(String plantingDate) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Anda belum login'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/plantings/check-conflict'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'planting_date': plantingDate}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'conflict': data['conflict'] ?? false,
+          'message': data['message'],
+          'expected_harvest_date': data['expected_harvest_date'],
+          'recommendation_date': data['recommendation_date']
+        };
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Gagal memeriksa jadwal'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Koneksi bermasalah: $e'};
+    }
+  }
+
+  static Future<List<dynamic>> getPlantings() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return [];
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/plantings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> deletePlanting(int id) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Anda belum login'};
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/plantings/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Lahan berhasil dihapus'};
+      } else {
+        return {'success': false, 'message': 'Gagal menghapus lahan'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Koneksi bermasalah: $e'};
+    }
   }
 
   static Future<Map<String, dynamic>> submitPlanting(Map<String, dynamic> plantingData) async {
@@ -199,6 +307,32 @@ class ApiService {
         return {'success': true, 'message': 'Laporan hama berhasil dikirim'};
       } else {
         return {'success': false, 'message': data['message'] ?? 'Gagal mengirim laporan'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Koneksi bermasalah: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updatePassword(String newPassword) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/update-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'new_password': newPassword}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_password', newPassword);
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Gagal memperbarui kata sandi'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Koneksi bermasalah: $e'};
