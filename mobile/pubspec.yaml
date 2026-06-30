@@ -67,6 +67,7 @@ flutter:
     - assets/images/ulat_grayak.png
     - assets/images/walang_sangit.png
     - assets/images/wareng.png
+    - assets/images/peta_sawah_mobile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
