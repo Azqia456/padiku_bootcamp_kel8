@@ -23,7 +23,8 @@ Route::middleware('auth')->group(function () {
     
     // Manajemen Petani
     Route::get('/dashboard/farmers', [DashboardController::class, 'farmers'])->name('dashboard.farmers');
-    Route::post('/dashboard/farmers', [DashboardController::class, 'storeFarmer'])->name('dashboard.farmers.store');
+    Route::post('/dashboard/farmers/{id}/approve', [DashboardController::class, 'approveFarmer'])->name('dashboard.farmers.approve');
+    Route::post('/dashboard/farmers/{id}/reject', [DashboardController::class, 'rejectFarmer'])->name('dashboard.farmers.reject');
     Route::get('/dashboard/farmers/{id}/edit', [DashboardController::class, 'editFarmer'])->name('dashboard.farmers.edit');
     Route::put('/dashboard/farmers/{id}', [DashboardController::class, 'updateFarmer'])->name('dashboard.farmers.update');
     Route::delete('/dashboard/farmers/{id}', [DashboardController::class, 'destroyFarmer'])->name('dashboard.farmers.destroy');

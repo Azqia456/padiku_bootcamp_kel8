@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -69,6 +70,61 @@ class ApiService {
         return {'success': true, 'message': data['message']};
       } else {
         return {'success': false, 'message': data['message'] ?? 'Login gagal'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Koneksi bermasalah: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> register({
+    required String name,
+    required String email,
+    required String password,
+    required String phone,
+    required String address,
+    required String district,
+    required XFile? profilePhoto,
+    required XFile? documentFile,
+  }) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/register'));
+      request.headers.addAll({
+        'Accept': 'application/json',
+      });
+
+      request.fields['name'] = name;
+      request.fields['email'] = email;
+      request.fields['password'] = password;
+      request.fields['phone'] = phone;
+      request.fields['address'] = address;
+      request.fields['district'] = district;
+
+      if (profilePhoto != null) {
+        final bytes = await profilePhoto.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'profile_photo',
+          bytes,
+          filename: profilePhoto.name,
+        ));
+      }
+
+      if (documentFile != null) {
+        final bytes = await documentFile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'document_file',
+          bytes,
+          filename: documentFile.name,
+        ));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'Pendaftaran berhasil'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Pendaftaran gagal'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Koneksi bermasalah: $e'};

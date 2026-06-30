@@ -11,6 +11,77 @@
 
 <x-page-banner title="Manajemen Petani" subtitle="Kelola data petani terdaftar di wilayah Karawang" image="Farmers harvesting rice in Vietnam_.jpeg" />
 
+@if($pendingFarmers->count() > 0)
+    <!-- Section: Permintaan Persetujuan -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 border border-slate-100 mb-8 border-l-4 border-yellow-500">
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse"></span>
+                Permintaan Persetujuan Pendaftaran ({{ $pendingFarmers->count() }})
+            </h2>
+            <p class="text-sm text-slate-500 font-medium">Akun petani baru yang memerlukan peninjauan berkas</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-100">
+                    <tr>
+                        <th class="px-6 py-4 text-left">Nama</th>
+                        <th class="px-6 py-4 text-left">Email</th>
+                        <th class="px-6 py-4 text-left">Telepon</th>
+                        <th class="px-6 py-4 text-left">Kecamatan</th>
+                        <th class="px-6 py-4 text-left">Foto Diri</th>
+                        <th class="px-6 py-4 text-left">Berkas Pendukung</th>
+                        <th class="px-6 py-4 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($pendingFarmers as $pending)
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 font-semibold text-slate-800">{{ $pending->name }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $pending->email }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $pending->phone }}</td>
+                        <td class="px-6 py-4 text-slate-500 font-medium">{{ $pending->district }}</td>
+                        <td class="px-6 py-4">
+                            @if($pending->profile_photo_path)
+                                <a href="{{ asset('storage/' . $pending->profile_photo_path) }}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-semibold underline flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    Lihat Foto
+                                </a>
+                            @else
+                                <span class="text-slate-400">Tidak ada</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            @if($pending->document_path)
+                                <a href="{{ asset('storage/' . $pending->document_path) }}" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-semibold underline flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    Lihat Berkas
+                                </a>
+                            @else
+                                <span class="text-slate-400">Tidak ada</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-center items-center gap-2">
+                                <form action="{{ route('dashboard.farmers.approve', $pending->id) }}" method="POST" onsubmit="return confirm('Setujui pendaftaran petani ini?')">
+                                    @csrf
+                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg transition text-xs font-semibold">Setujui (ACC)</button>
+                                </form>
+                                <form action="{{ route('dashboard.farmers.reject', $pending->id) }}" method="POST" onsubmit="return confirm('Tolak pendaftaran petani ini?')">
+                                    @csrf
+                                    <button type="submit" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Tolak</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
 <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 border border-slate-100">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-2">
         <div>

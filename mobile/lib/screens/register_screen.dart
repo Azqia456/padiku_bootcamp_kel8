@@ -1,7 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
+import '../utils/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,6 +15,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
   bool _isAgreed = false;
+  bool _isLoading = false;
 
   // Controller untuk mengambil data inputan
   final _nameController = TextEditingController();
@@ -24,8 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
 
   // Variabel untuk menyimpan file upload
-  File? _fotoDiri;
-  File? _fotoBerkas;
+  XFile? _fotoDiri;
+  XFile? _fotoBerkas;
 
   @override
   void dispose() {
@@ -38,8 +40,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _handleRegister() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await ApiService.register(
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      phone: _phoneController.text,
+      address: _alamatController.text,
+      district: _kecamatanController.text,
+      profilePhoto: _fotoDiri,
+      documentFile: _fotoBerkas,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Registrasi Berhasil', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Text(result['message'] ?? 'Pendaftaran berhasil. Akun Anda sedang diperiksa oleh admin.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // close dialog
+                Navigator.pushReplacementNamed(context, Routes.login); // go to login
+              },
+              child: const Text('Ke Halaman Masuk', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Registrasi gagal, silakan coba lagi.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   // Helper widget untuk tampilan tombol upload
-  Widget _buildUploadField(String title, File? file, VoidCallback onTap) {
+  Widget _buildUploadField(String title, XFile? file, VoidCallback onTap) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -64,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    file != null ? file.path.split('/').last : 'Pilih File',
+                    file != null ? file.name : 'Pilih File',
                     style: TextStyle(
                       color: file != null ? Colors.black87 : Colors.grey,
                     ),
@@ -180,19 +233,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _buildUploadField(
                   'Upload Foto Diri', 
                   _fotoDiri, 
-                  () {
-                    // TODO: Implementasi fungsi ambil foto menggunakan image_picker
-                    // setState(() { _fotoDiri = File(path_gambar); });
+                  () async {
+                    final ImagePicker picker = ImagePicker();
+                    final XFile? image = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      imageQuality: 70, // Optimize photo size
+                    );
+                    if (image != null) {
+                      setState(() {
+                        _fotoDiri = image;
+                      });
+                    }
                   }
                 ),
 
                 // 5. Upload Foto Berkas
                 _buildUploadField(
-                  'Upload Foto Berkas', 
+                  'Upload Foto Berkas (KTP/Bukti Lahan)', 
                   _fotoBerkas, 
-                  () {
-                    // TODO: Implementasi fungsi ambil dokumen/foto menggunakan file_picker atau image_picker
-                    // setState(() { _fotoBerkas = File(path_gambar); });
+                  () async {
+                    final ImagePicker picker = ImagePicker();
+                    final XFile? image = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      imageQuality: 70, // Optimize photo size
+                    );
+                    if (image != null) {
+                      setState(() {
+                        _fotoBerkas = image;
+                      });
+                    }
                   }
                 ),
 
@@ -310,10 +379,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: _isAgreed
+                    onPressed: (_isAgreed && !_isLoading)
                         ? () {
                             if (_formKey.currentState!.validate()) {
-                              // TODO: Proses Pendaftaran
+                              if (_fotoDiri == null || _fotoBerkas == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Foto Diri dan Foto Berkas wajib diunggah!'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              _handleRegister();
                             }
                           }
                         : null, 
@@ -325,10 +403,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Daftar',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),

@@ -63,68 +63,12 @@ class DashboardController extends Controller
         ));
     }
 
-    public function storeFarmer(Request $request)
-    {
-        $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'nik'           => 'required|string|size:16',
-            'email'         => 'required|email|unique:users,email',
-            'phone'         => 'required|string|max:20',
-            'district'      => 'required|string|max:100',
-            'village'       => 'required|string|max:100',
-            'address'       => 'required|string',
-            'area_hectares' => 'required|numeric',
-            'rice_variety'  => 'required|string',
-            'status'        => 'required|string',
-            'notes'         => 'nullable|string',
-            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
-
-        $newFarmer = null;
-        DB::transaction(function () use ($request, $validated, &$newFarmer) {
-            $photoPath = null;
-            if ($request->hasFile('profile_photo')) {
-                $photoPath = $request->file('profile_photo')->store('farmers', 'public');
-            }
-
-            $user = User::create([
-                'name'               => $validated['name'],
-                'nik'                => $validated['nik'],
-                'email'              => $validated['email'],
-                'phone'              => $validated['phone'],
-                'district'           => $validated['district'],
-                'village'            => $validated['village'],
-                'address'            => $validated['address'],
-                'profile_photo_path' => $photoPath, 
-                'user_type'          => 'petani',
-                'password'           => Hash::make('password123'),
-            ]);
-
-            Planting::create([
-                'user_id'       => $user->id,
-                'area_hectares' => $validated['area_hectares'],
-                'rice_variety'  => $validated['rice_variety'],
-                'status'        => $validated['status'],
-                'notes'         => $validated['notes'] ?? null,
-                'location_name' => $validated['village'],
-                'planting_date' => now(),
-            ]);
-
-            $newFarmer = User::where('id', $user->id)
-                ->with(['plantings'])
-                ->withSum('plantings', 'area_hectares')
-                ->first();
-        });
-
-        return response()->json(['success' => true, 'message' => 'Berhasil!', 'farmer' => $newFarmer]);
-    }
-
     public function destroyFarmer($id)
     {
         $farmer = User::where('user_type', 'petani')->findOrFail($id);
         
         if ($farmer->profile_photo_path) {
-            Storage::disk('public')->delete($farmer->profile_photo_path);
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($farmer->profile_photo_path);
         }
         
         $farmer->delete();
@@ -337,6 +281,7 @@ class DashboardController extends Controller
     public function farmers(Request $request)
     {
         $query = User::where('user_type', 'petani')
+            ->where('status', 'approved')
             ->with(['plantings'])
             ->withSum('plantings', 'area_hectares');
 
@@ -345,9 +290,33 @@ class DashboardController extends Controller
         }
 
         $farmers = $query->orderBy('name')->get();
-        $totalFarmersCount = User::where('user_type', 'petani')->count();
+        $totalFarmersCount = User::where('user_type', 'petani')->where('status', 'approved')->count();
 
-        return view('dashboard.farmers', compact('farmers', 'totalFarmersCount'));
+        // Ambil data petani yang menunggu persetujuan (pending)
+        $pendingFarmers = User::where('user_type', 'petani')
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('dashboard.farmers', compact('farmers', 'totalFarmersCount', 'pendingFarmers'));
+    }
+
+    public function approveFarmer($id)
+    {
+        $farmer = User::where('user_type', 'petani')->findOrFail($id);
+        $farmer->status = 'approved';
+        $farmer->save();
+
+        return redirect()->route('dashboard.farmers')->with('success', "Akun petani {$farmer->name} berhasil disetujui!");
+    }
+
+    public function rejectFarmer($id)
+    {
+        $farmer = User::where('user_type', 'petani')->findOrFail($id);
+        $farmer->status = 'rejected';
+        $farmer->save();
+
+        return redirect()->route('dashboard.farmers')->with('success', "Pendaftaran petani {$farmer->name} telah ditolak!");
     }
 
     public function editFarmer($id)
