@@ -107,7 +107,13 @@ class PusatBantuanScreen extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 3.5),
+      // Mengubah childAspectRatio menjadi 2.8 agar ada ruang vertikal jika teks menjadi 2 baris
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 2.8,
+      ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final it = items[index];
@@ -117,7 +123,6 @@ class PusatBantuanScreen extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-              // route mapping: akun -> account, lapor -> dashboard Lapor
               if (it['title'] == 'Akun Saya') Navigator.pushNamed(context, '/pengaturan/profil');
               if (it['title'] == 'Lapor Hama') Navigator.pushNamed(context, '/lapor/hama');
             },
@@ -128,11 +133,26 @@ class PusatBantuanScreen extends StatelessWidget {
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Icon(it['icon'] as IconData, color: AppColors.riceGreen, size: 20),
                   ),
                   const SizedBox(width: 10),
-                  Text(it['title'] as String, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                  // Membungkus Text dengan Expanded untuk mencegah overflow
+                  Expanded(
+                    child: Text(
+                      it['title'] as String,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13, // Sedikit disesuaikan agar proporsional
+                      ),
+                      maxLines: 2, // Mengizinkan teks menjadi maksimal 2 baris
+                      overflow: TextOverflow.ellipsis, // Menambahkan titik-titik jika masih terlalu panjang
+                    ),
+                  ),
                 ],
               ),
             ),

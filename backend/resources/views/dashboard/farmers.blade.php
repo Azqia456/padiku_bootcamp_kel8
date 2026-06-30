@@ -1,5 +1,4 @@
 @php $activeMenu = 'farmers'; @endphp
-
 @extends('layouts.admin')
 
 @section('title', 'Manajemen Petani')
@@ -12,26 +11,26 @@
 
 <x-page-banner title="Manajemen Petani" subtitle="Kelola data petani terdaftar di wilayah Karawang" image="Farmers harvesting rice in Vietnam_.jpeg" />
 
-<div class="bg-white rounded-xl shadow-sm overflow-hidden p-6">
-    <div class="flex justify-between items-center mb-6 mt-6">
+<div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 border border-slate-100">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-2">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Daftar Petani</h2>
-            <p class="text-sm text-gray-500 font-medium" id="farmerCount">{{ $farmers->count() }} petani terdaftar</p>
+            <h2 class="text-xl font-bold text-slate-800">Daftar Petani</h2>
+            <p class="text-sm text-slate-500 font-medium" id="farmerCount">{{ $farmers->count() }} petani terdaftar</p>
         </div>
-
-        <div class="flex items-center gap-3">
-            <input type="text" id="searchInput" placeholder="Cari petani..."
-                   class="border border-gray-300 rounded-full px-5 py-2.5 w-64 focus:ring-2 focus:ring-green-600 outline-none transition">
-
-            <button onclick="toggleModal('modalTambah', true)"
-                    class="bg-[#004d2e] text-white px-6 py-2.5 rounded-full font-semibold hover:bg-green-900 transition flex items-center gap-2">
+       
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <input type="text" id="searchInput" placeholder="Cari petani..." 
+                   class="border border-slate-200 rounded-full px-5 py-2.5 w-full sm:w-64 focus:ring-2 focus:ring-green-600 outline-none transition text-sm">
+           
+            <button onclick="toggleModal('modalTambah', true)" 
+                    class="bg-[#004d2e] text-white px-6 py-2.5 rounded-full font-semibold hover:bg-green-900 transition flex items-center gap-2 text-sm shrink-0">
                 <span>+</span> Tambah Petani
             </button>
         </div>
     </div>
 
     <table class="w-full text-sm">
-        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+        <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-100">
             <tr>
                 <th class="px-6 py-4 text-left">Nama</th>
                 <th class="px-6 py-4 text-left">Email</th>
@@ -42,7 +41,7 @@
                 <th class="px-6 py-4 text-center">Aksi</th>
             </tr>
         </thead>
-        <tbody id="farmersTableBody" class="divide-y">
+        <tbody id="farmersTableBody" class="divide-y divide-slate-100">
             @foreach($farmers as $farmer)
                 @include('dashboard.farmers.partials.farmer-row', ['farmer' => $farmer])
             @endforeach
@@ -50,7 +49,6 @@
     </table>
 </div>
 
-<!-- Modal Tambah Petani -->
 <div id="modalTambah" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-1">
@@ -63,10 +61,9 @@
             </button>
         </div>
         <p class="text-gray-500 text-sm mb-6 ml-8">Lengkapi data petani untuk didaftarkan ke sistem PADIKU.</p>
-
+       
         <form id="storeFarmerForm" enctype="multipart/form-data">
             @csrf
-
             <div class="mb-6">
                 <h3 class="text-xs font-bold text-hijau-utama mb-3 tracking-wider">DATA DIRI</h3>
                 <div class="grid grid-cols-2 gap-4">
@@ -141,7 +138,6 @@
     </div>
 </div>
 
-<!-- Modal Edit Petani -->
 <div id="modalEdit" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-1">
@@ -159,7 +155,6 @@
             @csrf
             @method('PUT')
             <input type="hidden" id="edit_farmer_id" name="farmer_id">
-
             <div class="mb-6">
                 <h3 class="text-xs font-bold text-hijau-utama mb-3 tracking-wider">DATA DIRI</h3>
                 <div class="grid grid-cols-2 gap-4">
@@ -235,7 +230,6 @@
 </div>
 
 <script>
-    // Global variables
     let allFarmers = @json($farmers);
 
     function toggleModal(modalId, show) {
@@ -247,21 +241,18 @@
         }
     }
 
-    // Helper function to get status class
     function getStatusClass(status) {
         if (status === 'persiapan') return 'bg-yellow-100 text-yellow-700';
         if (status === 'harvested') return 'bg-blue-100 text-blue-700';
         return 'bg-green-100 text-green-700';
     }
 
-    // Helper function to get status text
     function getStatusText(status) {
         if (status === 'persiapan') return 'Persiapan';
         if (status === 'harvested') return 'Sudah Panen';
         return 'Aktif Tanam';
     }
 
-    // Render farmer row
     function renderFarmerRow(farmer) {
         const planting = farmer.plantings && farmer.plantings.length > 0 ? farmer.plantings[0] : null;
         const area = farmer.plantings_sum_area_hectares || 0;
@@ -275,33 +266,41 @@
         }
 
         return `
-            <tr class="farmer-row hover:bg-gray-50" data-name="${farmer.name.toLowerCase()}" data-district="${farmer.district.toLowerCase()}" data-id="${farmer.id}">
-                <td class="px-6 py-4 flex items-center gap-3">
-                    ${photoHtml}
-                    <span class="font-medium text-gray-900">${farmer.name}</span>
-                </td>
-                <td class="px-6 py-4 text-gray-600">${farmer.email}</td>
-                <td class="px-6 py-4 text-gray-600">${farmer.phone}</td>
-                <td class="px-6 py-4 text-gray-600">${farmer.district}</td>
-                <td class="px-6 py-4 font-semibold">${area} Ha</td>
+            <tr class="farmer-row hover:bg-slate-50/50 transition-colors" data-name="${farmer.name.toLowerCase()}" data-district="${farmer.district.toLowerCase()}" data-id="${farmer.id}">
                 <td class="px-6 py-4">
-                    <span class="${getStatusClass(status)} px-2 py-1 rounded-full text-xs">● ${getStatusText(status)}</span>
+                    <div class="flex items-center gap-3">
+                        ${photoHtml}
+                        <span class="font-semibold text-slate-800">${farmer.name}</span>
+                    </div>
                 </td>
-                <td class="px-6 py-4 flex justify-center gap-2">
-                    <button onclick="openEditModal(${farmer.id})" class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg border border-orange-200 hover:bg-orange-100 transition">Edit</button>
-                    <button onclick="deleteFarmer(${farmer.id})" class="bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-200 hover:bg-red-100 transition">Hapus</button>
+                <td class="px-6 py-4 text-slate-600">${farmer.email}</td>
+                <td class="px-6 py-4 text-slate-600">${farmer.phone}</td>
+                <td class="px-6 py-4 text-slate-500 font-medium">${farmer.district}</td>
+                <td class="px-6 py-4 font-bold text-emerald-800">${area} Ha</td>
+                <td class="px-6 py-4">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusClass(status)} border border-emerald-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        ${getStatusText(status)}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex justify-center items-center gap-2">
+                        <button onclick="openEditModal(${farmer.id})" class="bg-slate-50 text-slate-600 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 transition text-xs font-semibold">Edit</button>
+                        <form action="{{ route('dashboard.farmers.destroy', ':id') }}" method="POST" onsubmit="return confirm('Yakin hapus data ini?')" style="display:inline;">
+                            @csrf @method('DELETE')
+                            <button type="submit" onclick="deleteFarmer(event, ${farmer.id})" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
         `;
     }
 
-    // Update farmer count
     function updateFarmerCount() {
         const visibleRows = document.querySelectorAll('.farmer-row:not([style*="display: none"])');
         document.getElementById('farmerCount').textContent = `${visibleRows.length} petani terdaftar`;
     }
 
-    // Real-time search
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
@@ -317,7 +316,6 @@
         updateFarmerCount();
     });
 
-    // Store Farmer
     document.getElementById('storeFarmerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -327,43 +325,34 @@
             const response = await fetch('{{ route('dashboard.farmers.store') }}', {
                 method: 'POST',
                 headers: {
-            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-            'Accept': 'application/json'
-        },
-        body: formData
-        });
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
 
-        const data = await response.json();
-        
-        if (data.success) {
-            // Add new farmer to allFarmers array
-            allFarmers.push(data.farmer);
-            // Add new row to table
-            const tbody = document.getElementById('farmersTableBody');
-            tbody.insertAdjacentHTML('beforeend', renderFarmerRow(data.farmer));
-            // Reset form and close modal
-            this.reset();
-            toggleModal('modalTambah', false);
-            // Show success message
-            alert(data.message);
-            // Update count
-            updateFarmerCount();
-        }
-        // Re-apply search filter
-        searchInput.dispatchEvent(new Event('input'));
+            const data = await response.json();
+            
+            if (data.success) {
+                allFarmers.push(data.farmer);
+                const tbody = document.getElementById('farmersTableBody');
+                tbody.insertAdjacentHTML('beforeend', renderFarmerRow(data.farmer));
+                this.reset();
+                toggleModal('modalTambah', false);
+                alert(data.message);
+                updateFarmerCount();
+            }
         } catch (error) {
-        console.error('Error:', error);
-        alert('Gagal menyimpan data petani');
+            console.error('Error:', error);
+            alert('Gagal menyimpan data petani');
         }
     });
 
-    // Open Edit Modal
     async function openEditModal(farmerId) {
         try {
             const response = await fetch(`/dashboard/farmers/${farmerId}/edit`);
             const farmer = await response.json();
 
-            // Populate form
             document.getElementById('edit_farmer_id').value = farmer.id;
             document.getElementById('edit_name').value = farmer.name;
             document.getElementById('edit_nik').value = farmer.nik;
@@ -373,7 +362,6 @@
             document.getElementById('edit_village').value = farmer.village;
             document.getElementById('edit_address').value = farmer.address;
 
-            // Populate planting data
             if (farmer.plantings && farmer.plantings.length > 0) {
                 const planting = farmer.plantings[0];
                 document.getElementById('edit_area_hectares').value = planting.area_hectares;
@@ -389,7 +377,6 @@
         }
     }
 
-    // Update Farmer
     document.getElementById('editFarmerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const farmerId = document.getElementById('edit_farmer_id').value;
@@ -407,23 +394,17 @@
             const data = await response.json();
             
             if (data.success) {
-                // Update in allFarmers array
                 const index = allFarmers.findIndex(f => f.id === data.farmer.id);
                 if (index !== -1) {
                     allFarmers[index] = data.farmer;
                 }
-                // Update row in table
                 const oldRow = document.querySelector(`.farmer-row[data-id="${farmerId}"]`);
                 if (oldRow) {
                     oldRow.outerHTML = renderFarmerRow(data.farmer);
                 }
-                // Reset form and close modal
                 this.reset();
                 toggleModal('modalEdit', false);
-                // Show success message
                 alert(data.message);
-                // Re-apply search filter
-                searchInput.dispatchEvent(new Event('input'));
             }
         } catch (error) {
             console.error('Error:', error);
@@ -431,27 +412,25 @@
         }
     });
 
-    // Delete Farmer
-    async function deleteFarmer(farmerId) {
+    function deleteFarmer(event, farmerId) {
+        event.preventDefault();
         if (!confirm('Yakin ingin menghapus data petani ini?')) {
             return;
         }
         
-        try {
-            const response = await fetch(`/dashboard/farmers/${farmerId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
+        const form = event.target.closest('form');
+        form.action = form.action.replace(':id', farmerId);
+        
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json'
+            }
+        }).then(response => response.json())
+        .then(data => {
             if (data.success) {
-                // Remove from allFarmers
                 allFarmers = allFarmers.filter(f => f.id !== farmerId);
-                // Remove from table
                 const row = document.querySelector(`.farmer-row[data-id="${farmerId}"]`);
                 if (row) {
                     row.remove();
@@ -459,10 +438,7 @@
                 updateFarmerCount();
                 alert(data.message);
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Gagal menghapus data petani');
-        }
+        });
     }
 </script>
 

@@ -32,20 +32,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/map', [DashboardController::class, 'map'])->name('dashboard.map');
     Route::get('/dashboard/plantings', [DashboardController::class, 'plantings'])->name('dashboard.plantings');
     Route::post('/dashboard/plantings', [DashboardController::class, 'storePlanting'])->name('dashboard.plantings.store');
+    Route::post('/dashboard/plantings/check-conflict', [DashboardController::class, 'checkHarvestConflict'])->name('dashboard.plantings.check-conflict');
     
-    // Hama & Monitoring - Nama method disesuaikan dengan Controller
+    // Hama & Monitoring
     Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pestMonitoring'])->name('dashboard.pest-monitoring');
     Route::post('/dashboard/pest-reports', [DashboardController::class, 'storePestReport'])->name('dashboard.pest-reports.store');
     
     // Distribusi Pupuk
     Route::get('/dashboard/fertilizer', [DashboardController::class, 'fertilizer'])->name('dashboard.fertilizer');
     Route::post('/dashboard/fertilizer', [DashboardController::class, 'storeFertilizerSchedule'])->name('dashboard.fertilizer.store');
+    Route::post('/dashboard/fertilizer-schedules/{id}/notify', [DashboardController::class, 'sendFertilizerNotification'])->name('dashboard.fertilizer.notify');
     
     // Informasi & Analisis
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
     Route::get('/dashboard/food-balance', [DashboardController::class, 'foodBalance'])->name('dashboard.food-balance');
     Route::get('/dashboard/data-analysis', [DashboardController::class, 'dataAnalysis'])->name('dashboard.data-analysis');
-    Route::get('/dashboard/early-warning', [DashboardController::class, 'earlyWarning'])->name('dashboard.early-warning');
+    Route::get('/dashboard/notifications-data', [DashboardController::class, 'getNotificationsData'])->name('dashboard.notifications-data');
 });
 
 // Profile Routes

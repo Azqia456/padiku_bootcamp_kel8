@@ -41,7 +41,7 @@ class ProfilScreen extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -69,7 +69,7 @@ class ProfilScreen extends StatelessWidget {
                 ),
               ),
               Positioned(
-                top: 70,
+                top: 24, // <-- Diubah dari 44 menjadi 24 agar elemen naik ke atas
                 left: 0,
                 right: 0,
                 child: Column(
@@ -87,7 +87,7 @@ class ProfilScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10), // <-- Jarak sedikit dirapatkan
                     Text(
                       'Pak Udin',
                       style: TextStyle(
@@ -217,16 +217,6 @@ class ProfilScreen extends StatelessWidget {
                       onTap: () => Navigator.pushNamed(context, Routes.keamananAkun),
                     ),
                     _buildMenuItem(
-                      icon: Icons.language,
-                      title: 'Pilih Bahasa',
-                      onTap: () {},
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.help_center,
-                      title: 'Pusat Bantuan',
-                      onTap: () => Navigator.pushNamed(context, Routes.pusatBantuan),
-                    ),
-                    _buildMenuItem(
                       icon: Icons.info,
                       title: 'Tentang Padiku',
                       onTap: () => Navigator.pushNamed(context, Routes.tentangPadiku),
@@ -242,7 +232,13 @@ class ProfilScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  Routes.login,
+                  (route) => false,
+                );
+              },
               icon: const Icon(Icons.logout),
               label: const Text('Keluar Akun'),
               style: ElevatedButton.styleFrom(
@@ -564,4 +560,3 @@ class ProfilScreen extends StatelessWidget {
     );
   }
 }
-

@@ -30,9 +30,42 @@
 @section('content')
 <x-page-banner
     title="Distribusi Pupuk"
-    subtitle="Kelola jadwal dan distribusi pupuk ke petani"
+    subtitle="Kelola jadwal pupuk petani dan rekomendasi pembagian pestisida gratis"
     image="complementary.webp"
 />
+
+@if($alertVillages && $alertVillages->count() > 0)
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+        <h3 class="font-bold text-amber-800 text-sm mb-3 flex items-center gap-2">
+            <span class="text-base">⚠️</span> Rekomendasi Distribusi Pestisida Nabati Gratis
+        </h3>
+        <p class="text-xs text-amber-700 leading-relaxed mb-4">
+            Desa-desa berikut saat ini berstatus **Waspada** akibat serangan hama. Direkomendasikan segera membagikan bantuan **Pestisida Nabati Gratis dan perlindungan hama ke lokasi tersebut:
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($alertVillages as $v)
+                <div class="bg-white rounded-xl border border-amber-100 p-4 flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="font-bold text-sm text-slate-800">Desa {{ $v->village }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Jumlah pelapor: <b>{{ $v->reporter_count }}</b></p>
+                    </div>
+                    <button onclick="distributePesticide('{{ $v->village }}')" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-3.5 py-2 rounded-full shadow-sm transition active:scale-95">
+                        Kirim Bantuan
+                    </button>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@else
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6">
+        <h3 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-2">
+            <span class="text-emerald-500 text-base">✓</span> Info Rekomendasi Distribusi Pestisida Nabati
+        </h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+            Belum ada desa yang berstatus **Waspada (≥ 3 pelapor)**. Rekomendasi pembagian pestisida gratis akan otomatis muncul di sini untuk membantu mempercepat bantuan bagi wilayah yang sedang terjangkit serangan hama.
+        </p>
+    </div>
+@endif
 
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#0A5C34]">
@@ -49,7 +82,7 @@
     </div>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+<div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 mb-6">
     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
         <h2 class="font-bold text-hijau-utama text-2xl">Jadwal Distribusi Pupuk</h2>
         <button onclick="toggleModal('modalTambah', true)" class="bg-green-100 text-hijau-utama px-5 py-2 rounded-full font-semibold hover:bg-green-200 transition flex items-center gap-2">
@@ -68,6 +101,7 @@
                     <th class="text-left px-6 py-3 font-semibold">Metode</th>
                     <th class="text-left px-6 py-3 font-semibold">Petugas</th>
                     <th class="text-left px-6 py-3 font-semibold">Status</th>
+                    <th class="text-center px-6 py-3 font-semibold">Aksi</th>
                 </tr>
             </thead>
             <tbody id="scheduleTableBody">
@@ -93,16 +127,20 @@
                                 {{ $statusLabels[$schedule->status] ?? ucfirst($schedule->status) }}
                             </span>
                         </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="sendNotification({{ $schedule->id }})" class="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold px-3.5 py-1.5 rounded-full transition active:scale-95">
+                                Kirim Notif
+                            </button>
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7"><x-empty-state message="Belum ada jadwal distribusi pupuk" /></td></tr>
+                    <tr><td colspan="8"><x-empty-state message="Belum ada jadwal distribusi pupuk" /></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Modal Tambah Jadwal -->
 <div id="modalTambah" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-1">
@@ -135,9 +173,7 @@
                             @foreach($groupedFarmers as $village => $farmersByVillage)
                                 <optgroup label="{{ $village }} - {{ $farmersByVillage->first()->district }}">
                                     @foreach($farmersByVillage as $farmer)
-                                        <option value="{{ $farmer->id }}" data-village="{{ $village }}" data-district="{{ $farmer->district }}">
-                                            {{ $farmer->name }} - {{ $village }} - {{ $farmer->district }}
-                                        </option>
+                                        <option value="{{ $farmer->id }}">{{ $farmer->name }} - {{ $village }} - {{ $farmer->district }}</option>
                                     @endforeach
                                 </optgroup>
                             @endforeach
@@ -229,31 +265,25 @@
                     dropdownParent: $('#modalTambah'),
                     width: '100%',
                     matcher: function(params, data) {
-                        // Jika tidak ada kata kunci, kembalikan semua data
                         if ($.trim(params.term) === '') {
                             return data;
                         }
-
-                        // Cari di teks option
                         if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
                             return data;
                         }
-
-                        // Cari di optgroup
                         if (data.children) {
-                            var children = [];
+                            let children = [];
                             $.each(data.children, function (idx, child) {
                                 if (child.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
                                     children.push(child);
                                 }
                             });
                             if (children.length) {
-                                var modifiedData = $.extend({}, data, true);
+                                let modifiedData = $.extend({}, data, true);
                                 modifiedData.children = children;
                                 return modifiedData;
                             }
                         }
-
                         return null;
                     }
                 });
@@ -294,9 +324,14 @@
                 <td class="px-6 py-4 text-gray-600">${methodLabels[schedule.delivery_method] || schedule.delivery_method}</td>
                 <td class="px-6 py-4 text-gray-600">${schedule.officer_in_charge || '-'}</td>
                 <td class="px-6 py-4">
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[schedule.status] || 'bg-gray-100 text-gray-700'}">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${statusColors[schedule.status] || 'bg-gray-100 text-gray-700' }">
                         ${statusLabels[schedule.status] || schedule.status}
                     </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button onclick="sendNotification(${schedule.id})" class="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold px-3.5 py-1.5 rounded-full transition active:scale-95">
+                        Kirim Notif
+                    </button>
                 </td>
             </tr>
         `;
@@ -329,7 +364,7 @@
                     scheduled_date: formData.get('scheduled_date')
                 };
                 const tableBody = document.getElementById('scheduleTableBody');
-                const emptyRow = tableBody.querySelector('td[colspan="7"]');
+                const emptyRow = tableBody.querySelector('td[colspan="8"]');
                 if (emptyRow) {
                     emptyRow.parentElement.remove();
                 }
@@ -344,5 +379,32 @@
             alert('Gagal menyimpan jadwal distribusi pupuk!');
         }
     });
+
+    function sendNotification(scheduleId) {
+        if (!confirm('Kirim notifikasi jadwal pupuk ini ke petani?')) return;
+
+        fetch('/dashboard/fertilizer-schedules/' + scheduleId + '/notify', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        ).then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+            } else {
+                alert('Gagal mengirim notifikasi.');
+            }
+        }).catch(err => {
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+        });
+    }
+
+    function distributePesticide(villageName) {
+        alert('Bantuan Pestisida Nabati Gratis berhasil diproses untuk didistribusikan ke petani di Desa ' + villageName + '. Notifikasi telah dikirimkan ke dinas cabang setempat.');
+    }
 </script>
 @endsection

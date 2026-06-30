@@ -562,7 +562,7 @@ Widget _buildModernStatusTile({
         Container(
           width: 48,
           height: 48,
-            decoration: BoxDecoration(
+          decoration: BoxDecoration(
             color: isActive ? color : color.withAlpha(31),
             borderRadius: BorderRadius.circular(16),
           ),
@@ -657,7 +657,7 @@ Widget _buildModernPestCard({
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                    color: isSelected
+                  color: isSelected
                       ? AppColors.riceGreen.withAlpha(36)
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(16),
@@ -725,6 +725,9 @@ class HomeDashboard extends StatelessWidget {
                         'Tanam',
                         Icons.calendar_month,
                         Colors.green,
+                        onTap: () {
+                          Navigator.pushNamed(context, Routes.kalenderTanam);
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -734,6 +737,9 @@ class HomeDashboard extends StatelessWidget {
                         'Panen',
                         Icons.grass,
                         Colors.orange,
+                        onTap: () {
+                          Navigator.pushNamed(context, Routes.laporanPanen);
+                        },
                       ),
                     ),
                   ],
@@ -746,6 +752,66 @@ class HomeDashboard extends StatelessWidget {
                   'Cerah Berawan',
                   Icons.cloud_queue,
                   Colors.blue,
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                      ),
+                      builder: (context) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Prakiraan Cuaca',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Karawang, Jawa Barat',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: const [
+                                  Icon(Icons.wb_sunny, color: Colors.orange, size: 36),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Cerah berawan • 28°C\nKelembapan 72% • Angin 10 km/jam',
+                                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: const [
+                                  Chip(label: Text('08.00 - Cerah')),
+                                  Chip(label: Text('12.00 - Panas')),
+                                  Chip(label: Text('16.00 - Berawan')),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildListTileCard(
@@ -755,6 +821,14 @@ class HomeDashboard extends StatelessWidget {
                   '12 Juli 2026',
                   Icons.spa,
                   Colors.green,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RekomendasiBudidayaModule(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildNotificationsList(),
@@ -793,123 +867,127 @@ class HomeDashboard extends StatelessWidget {
     return ClipPath(
       clipper: HeaderClipper(),
       child: Container(
-        height: 240,
+        height: 255, // Sedikit ditinggikan agar konten di bawahnya tetap punya ruang
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [Color(0xFF43A047), Color(0xFF2E7D32)],
           ),
-          image: DecorationImage(
-            image: NetworkImage(
-              'https://images.unsplash.com/photo-1595085816353-833215284489?q=80&w=600&auto=format&fit=crop',
-            ),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black26, BlendMode.darken),
-          ),
         ),
-        padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.menu, color: Colors.white, size: 28),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.grass, color: Colors.yellow, size: 28),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'PADIKU',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
+            // Layer 1: Gambar background yang posisinya diturunkan (navbar hijau di atasnya)
+            Positioned(
+              top: 95, // Jarak 95px dari atas menjadi warna hijau solid
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(
+                      'assets/images/Farmers harvesting rice in Vietnam_.jpeg',
                     ),
-                  ],
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(Colors.black26, BlendMode.darken),
+                  ),
                 ),
-                Row(
-                  children: [
-                    PopupMenuButton<String>(
-                      icon: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const CircleAvatar(
-                          radius: 16,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            color: Color(0xFF2E7D32),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      onSelected: (String choice) {
-                        if (choice == 'logout') {
-                          Navigator.pushReplacementNamed(context, Routes.login);
-                        }
-                      },
-                      itemBuilder: (BuildContext context) => [
-                        const PopupMenuItem(
-                          value: 'profile',
-                          child: Text('Profil'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'logout',
-                          child: Text('Keluar'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.notifications_none,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PupukSubsidiModule(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 25),
-            const Text(
-              'Selamat datang,',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Petani',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: const [
-                Text(
-                  'Semangat bertani hari ini!',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-                SizedBox(width: 4),
-                Icon(Icons.grass, color: Colors.yellow, size: 16),
-              ],
+            
+            // Layer 2: Konten UI Header
+            Padding(
+              padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          // Ikon menu dihapus di sini
+                          SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: Image.asset(
+                              'assets/images/logo_padi_dashboard.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'PADIKU',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.support_agent,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            tooltip: 'Pusat Bantuan',
+                            onPressed: () {
+                              Navigator.pushNamed(context, Routes.pusatBantuan);
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.notifications_none,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PupukSubsidiModule(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+                  const Text(
+                    'Selamat datang,',
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Petani',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: const [
+                      Text(
+                        'Semangat bertani hari ini!',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.grass, color: Colors.yellow, size: 16),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1009,44 +1087,40 @@ class HomeDashboard extends StatelessWidget {
       ),
       child: Column(
         children: [
-Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  crossAxisAlignment: CrossAxisAlignment.start, // Tambahkan ini agar saat teks turun baris, letaknya tetap rapi di atas
-  children: [
-    // 1. Bungkus Text dengan Expanded
-    Expanded(
-      child: const Text(
-        'Luas Lahan Aktif (Hektar)',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-      ),
-    ),
-    
-    // 2. Tambahkan jarak aman
-    const SizedBox(width: 12), 
-    
-    Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 4,
-      ),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min, // Pastikan Row dalam tombol ini seefisien mungkin
-        children: const [
-          Text(
-            '3 Tahun Terakhir',
-            style: TextStyle(fontSize: 12, color: Colors.black87),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: const Text(
+                  'Luas Lahan Aktif (Hektar)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      '3 Tahun Terakhir',
+                      style: TextStyle(fontSize: 12, color: Colors.black87),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.keyboard_arrow_down, size: 16),
+                  ],
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 4), // Jarak kecil antara teks dan ikon dropdown
-          Icon(Icons.keyboard_arrow_down, size: 16),
-        ],
-      ),
-    ),
-  ],
-),
           const SizedBox(height: 20),
           SizedBox(
             height: 140,
@@ -1062,50 +1136,60 @@ Row(
     String title,
     String subtitle,
     IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F8F1),
+    Color color, {
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.shade100, width: 1),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        splashColor: Colors.white.withOpacity(0.25),
+        highlightColor: Colors.white.withOpacity(0.15),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F8F1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.shade100, width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black87,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, color: color, size: 28),
+                  const SizedBox(height: 12),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  ),
+                ],
               ),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 14, color: Colors.black54),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: Colors.black54,
+                ),
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.chevron_right,
-              size: 16,
-              color: Colors.black54,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1116,81 +1200,89 @@ Row(
     String labelRight,
     String valueRight,
     IconData icon,
-    Color iconColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    Color iconColor, {
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F8F1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: const Color(0xFF4CAF50), size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  valueLeft,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  if (labelRight == 'Karawang')
-                    const Icon(Icons.location_on, size: 12, color: Colors.grey),
-                  Text(
-                    labelRight,
-                    style: const TextStyle(color: Colors.black54, fontSize: 12),
-                  ),
-                ],
-              ),
-              Text(
-                valueRight,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+        splashColor: Colors.white.withOpacity(0.25),
+        highlightColor: Colors.white.withOpacity(0.15),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          const SizedBox(width: 12),
-          const Icon(Icons.chevron_right, color: Colors.grey),
-        ],
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F8F1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: const Color(0xFF4CAF50), size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      valueLeft,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    children: [
+                      if (labelRight == 'Karawang')
+                        const Icon(Icons.location_on, size: 12, color: Colors.grey),
+                      Text(
+                        labelRight,
+                        style: const TextStyle(color: Colors.black54, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    valueRight,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1278,8 +1370,6 @@ Row(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, size: 16, color: Colors.black54),
           ],
         ),
       ],
@@ -1496,7 +1586,6 @@ class DataLahanModule extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         
-        // 1. UPDATE: Tambahkan onTap untuk navigasi ke Tambah Lahan
         _buildLahanCard(
           context,
           'Tambah Lahan',
@@ -1509,7 +1598,6 @@ class DataLahanModule extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         
-        // 2. UPDATE: Tambahkan onTap untuk navigasi ke Detail Lahan
         _buildLahanCard(
           context,
           'Detail Lahan',
@@ -1536,21 +1624,20 @@ class DataLahanModule extends StatelessWidget {
     );
   }
 
-  // 3. UPDATE: Tambahkan parameter `VoidCallback onTap` di sini
   Widget _buildLahanCard(
     BuildContext context,
     String title,
     String subtitle,
     IconData icon,
     Color color,
-    VoidCallback onTap, // <--- Parameter baru
+    VoidCallback onTap,
   ) {
     return _buildModernActionCard(
       title: title,
       subtitle: subtitle,
       icon: icon,
       color: color,
-      onTap: onTap, // <--- Gunakan parameter di sini
+      onTap: onTap, 
     );
   }
 }
@@ -2011,93 +2098,103 @@ class RekomendasiBudidayaModule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: AppColors.riceGradient,
+    // Dibungkus Scaffold agar tidak berlatar belakang hitam
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7F5),
+      appBar: AppBar(
+        title: const Text('Rekomendasi Budidaya', style: TextStyle(fontSize: 18)),
+        backgroundColor: const Color(0xFF2E7D32), // Warna hijau khas aplikasi Anda
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.lightbulb,
-                    size: 48,
-                    color: AppColors.riceWhite,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Rekomendasi Budidaya',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.riceWhite,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Tips untuk hasil panen yang lebih baik',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.riceCream,
-                          ),
-                        ),
-                      ],
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.riceGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.lightbulb,
+                      size: 48,
+                      color: AppColors.riceWhite,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Rekomendasi Budidaya',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.riceWhite,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tips untuk hasil panen yang lebih baik',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.riceCream,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          _buildRecommendationCard(
-            'Gunakan Mulsa Jerami',
-            'Menjaga kelembaban tanah dan menekan pertumbuhan gulma',
-            Icons.grass,
-            AppColors.riceGreen,
-          ),
-          const SizedBox(height: 12),
-          _buildRecommendationCard(
-            'Hindari Pembakaran Jerami',
-            'Jerami dapat dijadikan kompos untuk kesuburan tanah',
-            Icons.block,
-            Colors.red,
-          ),
-          const SizedBox(height: 12),
-          _buildRecommendationCard(
-            'Tambah Bahan Organik',
-            'Pupuk kandang atau kompos untuk meningkatkan struktur tanah',
-            Icons.compost,
-            AppColors.riceYellow,
-          ),
-          const SizedBox(height: 12),
-          _buildRecommendationCard(
-            'Waspada Kekeringan',
-            'Pastikan sistem irigasi berfungsi baik saat musim kemarau',
-            Icons.water_drop,
-            Colors.blue,
-          ),
-          const SizedBox(height: 12),
-          _buildRecommendationCard(
-            'Rotasi Tanaman',
-            'Tanam tanaman berbeda setiap musim untuk menjaga kesuburan',
-            Icons.autorenew,
-            AppColors.riceOrange,
-          ),
-        ],
+            const SizedBox(height: 20),
+            _buildRecommendationCard(
+              'Gunakan Mulsa Jerami',
+              'Menjaga kelembaban tanah dan menekan pertumbuhan gulma',
+              Icons.grass,
+              AppColors.riceGreen,
+            ),
+            const SizedBox(height: 12),
+            _buildRecommendationCard(
+              'Hindari Pembakaran Jerami',
+              'Jerami dapat dijadikan kompos untuk kesuburan tanah',
+              Icons.block,
+              Colors.red,
+            ),
+            const SizedBox(height: 12),
+            _buildRecommendationCard(
+              'Tambah Bahan Organik',
+              'Pupuk kandang atau kompos untuk meningkatkan struktur tanah',
+              Icons.compost,
+              AppColors.riceYellow,
+            ),
+            const SizedBox(height: 12),
+            _buildRecommendationCard(
+              'Waspada Kekeringan',
+              'Pastikan sistem irigasi berfungsi baik saat musim kemarau',
+              Icons.water_drop,
+              Colors.blue,
+            ),
+            const SizedBox(height: 12),
+            _buildRecommendationCard(
+              'Rotasi Tanaman',
+              'Tanam tanaman berbeda setiap musim untuk menjaga kesuburan',
+              Icons.autorenew,
+              AppColors.riceOrange,
+            ),
+          ],
+        ),
       ),
     );
   }

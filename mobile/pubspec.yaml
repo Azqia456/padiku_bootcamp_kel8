@@ -59,12 +59,15 @@ flutter:
     - assets/images/logo_padi.png
     - assets/images/bg.jpg
     - assets/images/bg_db.png
+    - assets/images/Farmers harvesting rice in Vietnam_.jpeg
+    - assets/images/logo_padi_dashboard.png
     # Tambahkan baris di bawah ini:
     - assets/images/belalang.png
     - assets/images/blas.png
     - assets/images/ulat_grayak.png
     - assets/images/walang_sangit.png
     - assets/images/wareng.png
+    - assets/images/peta_sawah_mobile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

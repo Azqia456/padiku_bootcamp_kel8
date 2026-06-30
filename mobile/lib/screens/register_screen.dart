@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
@@ -17,16 +18,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Controller untuk mengambil data inputan
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _alamatController = TextEditingController();
   final _kecamatanController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // Variabel untuk menyimpan file upload
+  File? _fotoDiri;
+  File? _fotoBerkas;
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
+    _alamatController.dispose();
     _kecamatanController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Helper widget untuk tampilan tombol upload
+  Widget _buildUploadField(String title, File? file, VoidCallback onTap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.cloud_upload_outlined, color: Colors.grey),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    file != null ? file.path.split('/').last : 'Pilih File',
+                    style: TextStyle(
+                      color: file != null ? Colors.black87 : Colors.grey,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+      ],
+    );
   }
 
   @override
@@ -53,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Input Nama Lengkap
+                // 1. Input Nama Lengkap
                 const Text(
                   'Nama lengkap',
                   style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
@@ -76,7 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Input No. HP
+                // 2. Input No. HP
                 const Text(
                   'No. HP',
                   style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
@@ -100,7 +152,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Input Kecamatan 
+                // 3. Input Email
+                const Text(
+                  'Email',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    hintText: 'contoh@email.com',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // 4. Upload Foto Diri
+                _buildUploadField(
+                  'Upload Foto Diri', 
+                  _fotoDiri, 
+                  () {
+                    // TODO: Implementasi fungsi ambil foto menggunakan image_picker
+                    // setState(() { _fotoDiri = File(path_gambar); });
+                  }
+                ),
+
+                // 5. Upload Foto Berkas
+                _buildUploadField(
+                  'Upload Foto Berkas', 
+                  _fotoBerkas, 
+                  () {
+                    // TODO: Implementasi fungsi ambil dokumen/foto menggunakan file_picker atau image_picker
+                    // setState(() { _fotoBerkas = File(path_gambar); });
+                  }
+                ),
+
+                // 6. Input Alamat Lahan
+                const Text(
+                  'Alamat Lahan',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _alamatController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Masukkan alamat lengkap lahan',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // 7. Input Kecamatan 
                 const Text(
                   'Kecamatan',
                   style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
@@ -123,7 +243,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Input Kata Sandi
+                // 8. Input Kata Sandi
                 const Text(
                   'Kata sandi',
                   style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
@@ -193,7 +313,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: _isAgreed
                         ? () {
                             if (_formKey.currentState!.validate()) {
-                          
+                              // TODO: Proses Pendaftaran
                             }
                           }
                         : null, 
@@ -221,11 +341,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(color: Colors.black54),
                     ),
                     GestureDetector(
-  onTap: () {
-    Navigator.pushNamed(context, Routes.login);
-  },
-  child: Text(
-    'Masuk',
+                      onTap: () {
+                        Navigator.pushNamed(context, Routes.login);
+                      },
+                      child: Text(
+                        'Masuk',
                         style: TextStyle(
                           color: AppColors.riceGreen,
                           fontWeight: FontWeight.bold,
@@ -234,6 +354,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 24), // Tambahan padding bawah agar lebih rapi saat di-scroll
               ],
             ),
           ),

@@ -52,10 +52,14 @@ class DashboardController extends Controller
 
         $totalFertilizer = FertilizerSchedule::count();
         
+        $foodTotalProduction = Planting::where('status', 'harvested')->sum('area_hectares') * 5;
+        $foodTotalConsumption = $totalFarmers * 0.3;
+        $foodBalance = $foodTotalProduction - $foodTotalConsumption;
+        
         return view('dashboard.index', compact(
             'totalPlantings', 'totalArea', 'totalPestReports', 'activePestReports', 'totalFarmers', 
             'plantingsByDistrict', 'recentPestReports', 'productionByStatus', 'monthlyProduction', 
-            'recentFarmers', 'totalFertilizer'
+            'recentFarmers', 'totalFertilizer', 'foodTotalProduction', 'foodTotalConsumption', 'foodBalance'
         ));
     }
 
@@ -119,7 +123,6 @@ class DashboardController extends Controller
     {
         $farmer = User::where('user_type', 'petani')->findOrFail($id);
         
-        // Hapus foto jika ada
         if ($farmer->profile_photo_path) {
             Storage::disk('public')->delete($farmer->profile_photo_path);
         }
@@ -128,64 +131,63 @@ class DashboardController extends Controller
         return response()->json(['success' => true, 'message' => 'Petani berhasil dihapus!']);
     }
 
-    // Method Monitor Hama (Diperbaiki namanya)
     public function pestMonitoring()
     {
-        $pestReports = PestReport::with(['user', 'planting'])->get();
+        $pestReports = PestReport::with(['user', 'planting'])->orderBy('report_date', 'desc')->get();
         $activeCount = $pestReports->where('status', '!=', 'resolved')->count();
         
-        // Data untuk statistik per wilayah
-        $pestData = PestReport::selectRaw('
-                users.district,
-                COUNT(*) as total_reports,
-                COUNT(DISTINCT users.id) as affected_farmers,
-                SUM(plantings.area_hectares) as affected_area,
-                CASE 
-                    WHEN COUNT(*) = 0 THEN 0
-                    ELSE (SUM(CASE WHEN severity IN (\'high\', \'critical\') THEN 1 ELSE 0 END) / COUNT(*)) * 100 
-                END as severity_percentage
-            ')
-            ->join('users', 'pest_reports.user_id', '=', 'users.id')
-            ->leftJoin('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
-            ->groupBy('users.district')
-            ->get();
-            
-        // Tambahkan common pest untuk setiap district (sederhana)
-        $pestData->transform(function ($item) {
-            $item->common_pest = PestReport::whereHas('user', function($q) use ($item) {
-                $q->where('district', $item->district);
-            })->select('pest_type')->groupBy('pest_type')->orderByRaw('COUNT(*) DESC')->first();
-            return $item;
-        });
-        
-        // Statistik tingkat keparahan
         $severityStats = PestReport::selectRaw('severity, COUNT(*) as count')
             ->groupBy('severity')
+            ->orderByRaw("FIELD(severity, 'critical', 'high', 'medium', 'low')")
             ->get();
-            
-        return view('dashboard.pest-monitoring', compact('pestReports', 'activeCount', 'pestData', 'severityStats'));
+
+        $pestData = PestReport::selectRaw('
+                plantings.location_name as district,
+                COUNT(pest_reports.id) as total_reports,
+                SUM(plantings.area_hectares) as affected_area,
+                COUNT(DISTINCT pest_reports.user_id) as affected_farmers,
+                (COUNT(CASE WHEN pest_reports.severity IN ("high","critical") THEN 1 END) / COUNT(pest_reports.id)) * 100 as severity_percentage
+            ')
+            ->join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->groupBy('plantings.location_name')
+            ->get()
+            ->map(function ($item) {
+                $item->common_pest = PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+                    ->where('plantings.location_name', $item->district)
+                    ->selectRaw('pest_type, COUNT(*) as c')
+                    ->groupBy('pest_type')
+                    ->orderByDesc('c')
+                    ->first();
+                return $item;
+            });
+
+        $villageReportCounts = PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->selectRaw('plantings.location_name as village, COUNT(DISTINCT pest_reports.user_id) as reporter_count')
+            ->groupBy('plantings.location_name')
+            ->get()
+            ->pluck('reporter_count', 'village');
+
+        return view('dashboard.pest-monitoring', compact(
+            'pestReports', 'pestData', 'activeCount', 'severityStats', 'villageReportCounts'
+        ));
     }
 
-    // Method Early Warning (Diperbaiki agar tidak error)
     public function earlyWarning()
     {
-        // Mengambil data hama dengan tingkat keparahan tinggi untuk warning
         $criticalPests = PestReport::whereIn('severity', ['high', 'critical'])
             ->where('status', '!=', 'resolved')
             ->with(['user', 'planting'])
             ->latest()
             ->get();
-            
-        // Panen dalam 14 hari ke depan
+
         $upcomingHarvests = Planting::where('expected_harvest_date', '>=', now())
             ->where('expected_harvest_date', '<=', now()->addDays(14))
             ->with('user')
             ->orderBy('expected_harvest_date')
             ->get();
-            
-        // Notifikasi peringatan (ambil dari tabel notifications)
+
         $recentNotifications = Notification::latest()->take(10)->get();
-            
+
         return view('dashboard.early-warning', compact('criticalPests', 'upcomingHarvests', 'recentNotifications'));
     }
 
@@ -215,6 +217,40 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Data lahan tanam berhasil ditambahkan!');
     }
 
+    public function checkHarvestConflict(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'planting_date' => 'required|date'
+        ]);
+
+        $user = User::find($request->user_id);
+        if (!$user) {
+            return response()->json(['conflict' => false]);
+        }
+
+        $plantingDate = \Carbon\Carbon::parse($request->planting_date);
+        
+        $conflicts = Planting::whereHas('user', function($q) use ($user) {
+                $q->where('district', $user->district);
+            })
+            ->whereBetween('planting_date', [
+                $plantingDate->copy()->subDays(7), 
+                $plantingDate->copy()->addDays(7)
+            ])
+            ->count();
+
+        if ($conflicts >= 1) {
+            return response()->json([
+                'conflict' => true,
+                'message' => '⚠️ Peringatan: Terdapat potensi panen serempak (' . $conflicts . ' lahan) di Kec. ' . $user->district . ' pada minggu ini. Disarankan menunda masa tanam.',
+                'recommendation_date' => $plantingDate->copy()->addDays(7)->format('Y-m-d')
+            ]);
+        }
+
+        return response()->json(['conflict' => false]);
+    }
+
     public function storePestReport(Request $request)
     {
         $validated = $request->validate([
@@ -237,10 +273,41 @@ class DashboardController extends Controller
     public function map()
     {
         $plantings = Planting::with('user')->get();
-        $plantingData = Planting::selectRaw('users.district, COUNT(*) as total_plantings, SUM(plantings.area_hectares) as total_area')
+        $plantingData = Planting::selectRaw('
+                users.district,
+                COUNT(*) as total_plantings,
+                SUM(plantings.area_hectares) as total_area,
+                SUM(plantings.area_hectares * 5) as estimated_yield,
+                AVG(DATEDIFF(NOW(), plantings.planting_date) / 30) as avg_age_months,
+                (SELECT status FROM plantings p2
+                    JOIN users u2 ON p2.user_id = u2.id
+                    WHERE u2.district = users.district
+                    GROUP BY p2.status ORDER BY COUNT(*) DESC LIMIT 1
+                ) as dominant_phase
+            ')
             ->join('users', 'plantings.user_id', '=', 'users.id')
             ->groupBy('users.district')
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $phaseLabels = [
+                    'planted'    => 'Baru Tanam',
+                    'growing'    => 'Pertumbuhan',
+                    'harvested'  => 'Selesai Panen',
+                    'ready'      => 'Siap Panen',
+                ];
+                $item->phase_label = $phaseLabels[$item->dominant_phase] ?? ucfirst($item->dominant_phase ?? '-');
+                $item->avg_age_months = round($item->avg_age_months ?? 0, 1);
+
+                $item->common_variety = Planting::join('users', 'plantings.user_id', '=', 'users.id')
+                    ->where('users.district', $item->district)
+                    ->selectRaw('rice_variety, COUNT(*) as c')
+                    ->groupBy('rice_variety')
+                    ->orderByDesc('c')
+                    ->first();
+
+                return $item;
+            });
+
         return view('dashboard.map', compact('plantings', 'plantingData'));
     }
     
@@ -310,9 +377,7 @@ class DashboardController extends Controller
 
         $updatedFarmer = null;
         DB::transaction(function () use ($request, $validated, $farmer, &$updatedFarmer) {
-            // Update foto jika ada
             if ($request->hasFile('profile_photo')) {
-                // Hapus foto lama jika ada
                 if ($farmer->profile_photo_path) {
                     Storage::disk('public')->delete($farmer->profile_photo_path);
                 }
@@ -330,7 +395,6 @@ class DashboardController extends Controller
                 'address'  => $validated['address'],
             ]);
 
-            // Update atau buat planting
             $planting = $farmer->plantings()->first();
             if ($planting) {
                 $planting->update([
@@ -351,7 +415,6 @@ class DashboardController extends Controller
                 ]);
             }
 
-            // Reload farmer dengan plantings sum
             $updatedFarmer = User::where('user_type', 'petani')
                 ->with(['plantings'])
                 ->withSum('plantings', 'area_hectares')
@@ -370,7 +433,15 @@ class DashboardController extends Controller
         $schedules = FertilizerSchedule::with(['user', 'planting'])->latest()->get();
         $farmers = User::where('user_type', 'petani')->get();
         $plantings = Planting::with('user')->get();
-        return view('dashboard.fertilizer', compact('schedules', 'farmers', 'plantings'));
+
+        $alertVillages = PestReport::join('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->selectRaw('plantings.location_name as village, COUNT(DISTINCT pest_reports.user_id) as reporter_count')
+            ->where('pest_reports.status', '!=', 'resolved')
+            ->groupBy('plantings.location_name')
+            ->having('reporter_count', '>=', 3)
+            ->get();
+
+        return view('dashboard.fertilizer', compact('schedules', 'farmers', 'plantings', 'alertVillages'));
     }
 
     public function storeFertilizerSchedule(Request $request)
@@ -393,6 +464,78 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Jadwal distribusi pupuk berhasil ditambahkan!',
+        ]);
+    }
+
+    public function sendFertilizerNotification(Request $request, $id)
+    {
+        $schedule = FertilizerSchedule::with('user')->findOrFail($id);
+        
+        $notification = Notification::create([
+            'user_id' => $schedule->user_id,
+            'title' => 'Jadwal Distribusi Pupuk: ' . $schedule->fertilizer_type,
+            'message' => 'Halo ' . ($schedule->user->name ?? 'Petani') . ', pupuk Anda (' . $schedule->fertilizer_type . ') sebanyak ' . number_format($schedule->amount_kg, 1) . ' kg dijadwalkan didistribusikan pada ' . ($schedule->scheduled_date ? $schedule->scheduled_date->format('d M Y') : '-') . '. Silakan bersiap.',
+            'type' => 'system',
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifikasi pupuk berhasil dikirim ke petani ' . ($schedule->user->name ?? '')
+        ]);
+    }
+
+    public function getNotificationsData()
+    {
+        $criticalPests = PestReport::with(['user', 'planting'])
+            ->whereIn('severity', ['high', 'critical'])
+            ->where('status', '!=', 'resolved')
+            ->orderBy('report_date', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => 'pest',
+                    'title' => 'Serangan Hama Kritis: ' . $item->pest_type,
+                    'message' => 'Dilaporkan oleh ' . ($item->user->name ?? 'Petani') . ' di Desa ' . ($item->planting->location_name ?? 'Lahan'),
+                    'time' => $item->report_date ? $item->report_date->format('d M Y') : $item->created_at->format('d M Y')
+                ];
+            });
+
+        $upcomingHarvests = Planting::with('user')
+            ->whereBetween('expected_harvest_date', [now(), now()->addDays(14)])
+            ->orderBy('expected_harvest_date', 'asc')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => 'harvest',
+                    'title' => 'Panen Mendekat di Desa ' . $item->location_name,
+                    'message' => 'Petani ' . ($item->user->name ?? 'Petani') . ' (Varietas: ' . $item->rice_variety . ')',
+                    'time' => $item->expected_harvest_date ? $item->expected_harvest_date->format('d M Y') : ''
+                ];
+            });
+
+        $recentNotifications = Notification::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => 'system',
+                    'title' => $item->title,
+                    'message' => $item->message,
+                    'time' => $item->created_at->format('d M Y, H:i')
+                ];
+            });
+
+        $notifications = collect()
+            ->concat($criticalPests)
+            ->concat($upcomingHarvests)
+            ->concat($recentNotifications);
+
+        return response()->json([
+            'notifications' => $notifications,
+            'totalCount' => $notifications->count()
         ]);
     }
 }
