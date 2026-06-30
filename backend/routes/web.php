@@ -21,9 +21,11 @@ Route::middleware('auth')->group(function () {
     // Dashboard Utama
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Manajemen Petani (Lengkap)
+    // Manajemen Petani
     Route::get('/dashboard/farmers', [DashboardController::class, 'farmers'])->name('dashboard.farmers');
     Route::post('/dashboard/farmers', [DashboardController::class, 'storeFarmer'])->name('dashboard.farmers.store');
+    Route::get('/dashboard/farmers/{id}/edit', [DashboardController::class, 'editFarmer'])->name('dashboard.farmers.edit');
+    Route::put('/dashboard/farmers/{id}', [DashboardController::class, 'updateFarmer'])->name('dashboard.farmers.update');
     Route::delete('/dashboard/farmers/{id}', [DashboardController::class, 'destroyFarmer'])->name('dashboard.farmers.destroy');
     
     // Peta & Lahan
@@ -31,18 +33,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/plantings', [DashboardController::class, 'plantings'])->name('dashboard.plantings');
     Route::post('/dashboard/plantings', [DashboardController::class, 'storePlanting'])->name('dashboard.plantings.store');
     
-    // Hama & Monitoring
-    Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pest-monitoring'])->name('dashboard.pest-monitoring');
+    // Hama & Monitoring - Nama method disesuaikan dengan Controller
+    Route::get('/dashboard/pest-monitoring', [DashboardController::class, 'pestMonitoring'])->name('dashboard.pest-monitoring');
     Route::post('/dashboard/pest-reports', [DashboardController::class, 'storePestReport'])->name('dashboard.pest-reports.store');
     
-    // Informasi & Analisis
+    // Distribusi Pupuk
     Route::get('/dashboard/fertilizer', [DashboardController::class, 'fertilizer'])->name('dashboard.fertilizer');
+    Route::post('/dashboard/fertilizer', [DashboardController::class, 'storeFertilizerSchedule'])->name('dashboard.fertilizer.store');
+    
+    // Informasi & Analisis
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
     Route::get('/dashboard/food-balance', [DashboardController::class, 'foodBalance'])->name('dashboard.food-balance');
     Route::get('/dashboard/data-analysis', [DashboardController::class, 'dataAnalysis'])->name('dashboard.data-analysis');
     Route::get('/dashboard/early-warning', [DashboardController::class, 'earlyWarning'])->name('dashboard.early-warning');
 });
 
+// Profile Routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

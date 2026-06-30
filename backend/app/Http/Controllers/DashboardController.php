@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Storage; 
 
 class DashboardController extends Controller
 {
@@ -71,11 +72,12 @@ class DashboardController extends Controller
             'area_hectares' => 'required|numeric',
             'rice_variety'  => 'required|string',
             'status'        => 'required|string',
-            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validasi foto
+            'notes'         => 'nullable|string',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        DB::transaction(function () use ($request, $validated) {
-            // 2. Logika penyimpanan foto
+        $newFarmer = null;
+        DB::transaction(function () use ($request, $validated, &$newFarmer) {
             $photoPath = null;
             if ($request->hasFile('profile_photo')) {
                 $photoPath = $request->file('profile_photo')->store('farmers', 'public');
@@ -99,12 +101,98 @@ class DashboardController extends Controller
                 'area_hectares' => $validated['area_hectares'],
                 'rice_variety'  => $validated['rice_variety'],
                 'status'        => $validated['status'],
+                'notes'         => $validated['notes'] ?? null,
                 'location_name' => $validated['village'],
                 'planting_date' => now(),
             ]);
+
+            $newFarmer = User::where('id', $user->id)
+                ->with(['plantings'])
+                ->withSum('plantings', 'area_hectares')
+                ->first();
         });
 
-        return redirect()->route('dashboard.farmers')->with('success', 'Petani dan data lahan berhasil ditambahkan!');
+        return response()->json(['success' => true, 'message' => 'Berhasil!', 'farmer' => $newFarmer]);
+    }
+
+    public function destroyFarmer($id)
+    {
+        $farmer = User::where('user_type', 'petani')->findOrFail($id);
+        
+        // Hapus foto jika ada
+        if ($farmer->profile_photo_path) {
+            Storage::disk('public')->delete($farmer->profile_photo_path);
+        }
+        
+        $farmer->delete();
+        return response()->json(['success' => true, 'message' => 'Petani berhasil dihapus!']);
+    }
+
+    // Method Monitor Hama (Diperbaiki namanya)
+    public function pestMonitoring()
+    {
+        $pestReports = PestReport::with(['user', 'planting'])->get();
+        $activeCount = $pestReports->where('status', '!=', 'resolved')->count();
+        
+        // Data untuk statistik per wilayah
+        $pestData = PestReport::selectRaw('
+                users.district,
+                COUNT(*) as total_reports,
+                COUNT(DISTINCT users.id) as affected_farmers,
+                SUM(plantings.area_hectares) as affected_area,
+                CASE 
+                    WHEN COUNT(*) = 0 THEN 0
+                    ELSE (SUM(CASE WHEN severity IN (\'high\', \'critical\') THEN 1 ELSE 0 END) / COUNT(*)) * 100 
+                END as severity_percentage
+            ')
+            ->join('users', 'pest_reports.user_id', '=', 'users.id')
+            ->leftJoin('plantings', 'pest_reports.planting_id', '=', 'plantings.id')
+            ->groupBy('users.district')
+            ->get();
+            
+        // Tambahkan common pest untuk setiap district (sederhana)
+        $pestData->transform(function ($item) {
+            $item->common_pest = PestReport::whereHas('user', function($q) use ($item) {
+                $q->where('district', $item->district);
+            })->select('pest_type')->groupBy('pest_type')->orderByRaw('COUNT(*) DESC')->first();
+            return $item;
+        });
+        
+        // Statistik tingkat keparahan
+        $severityStats = PestReport::selectRaw('severity, COUNT(*) as count')
+            ->groupBy('severity')
+            ->get();
+            
+        return view('dashboard.pest-monitoring', compact('pestReports', 'activeCount', 'pestData', 'severityStats'));
+    }
+
+    // Method Early Warning (Diperbaiki agar tidak error)
+    public function earlyWarning()
+    {
+        // Mengambil data hama dengan tingkat keparahan tinggi untuk warning
+        $criticalPests = PestReport::whereIn('severity', ['high', 'critical'])
+            ->where('status', '!=', 'resolved')
+            ->with(['user', 'planting'])
+            ->latest()
+            ->get();
+            
+        // Panen dalam 14 hari ke depan
+        $upcomingHarvests = Planting::where('expected_harvest_date', '>=', now())
+            ->where('expected_harvest_date', '<=', now()->addDays(14))
+            ->with('user')
+            ->orderBy('expected_harvest_date')
+            ->get();
+            
+        // Notifikasi peringatan (ambil dari tabel notifications)
+        $recentNotifications = Notification::latest()->take(10)->get();
+            
+        return view('dashboard.early-warning', compact('criticalPests', 'upcomingHarvests', 'recentNotifications'));
+    }
+
+    public function plantings()
+    {
+        $plantings = Planting::with('user')->get();
+        return view('dashboard.plantings', compact('plantings'));
     }
 
     public function storePlanting(Request $request)
@@ -124,7 +212,7 @@ class DashboardController extends Controller
         $validated['longitude'] = $request->longitude ?? 107.3053;
 
         Planting::create($validated);
-        return response()->json(['success' => true, 'message' => 'Data lahan tanam berhasil ditambahkan!']);
+        return redirect()->back()->with('success', 'Data lahan tanam berhasil ditambahkan!');
     }
 
     public function storePestReport(Request $request)
@@ -143,13 +231,13 @@ class DashboardController extends Controller
         $validated['longitude'] = $request->longitude ?? 107.3053;
 
         PestReport::create($validated);
-        return response()->json(['success' => true, 'message' => 'Laporan serangan hama berhasil dikirim!']);
+        return redirect()->back()->with('success', 'Laporan serangan hama berhasil dikirim!');
     }
     
     public function map()
     {
         $plantings = Planting::with('user')->get();
-        $plantingData = Planting::selectRaw('users.district, COUNT(*) as total_plantings, SUM(area_hectares) as total_area')
+        $plantingData = Planting::selectRaw('users.district, COUNT(*) as total_plantings, SUM(plantings.area_hectares) as total_area')
             ->join('users', 'plantings.user_id', '=', 'users.id')
             ->groupBy('users.district')
             ->get();
@@ -182,6 +270,7 @@ class DashboardController extends Controller
     public function farmers(Request $request)
     {
         $query = User::where('user_type', 'petani')
+            ->with(['plantings'])
             ->withSum('plantings', 'area_hectares');
 
         if ($request->has('search') && $request->search != '') {
@@ -194,32 +283,116 @@ class DashboardController extends Controller
         return view('dashboard.farmers', compact('farmers', 'totalFarmersCount'));
     }
 
-    public function destroyFarmer($id)
+    public function editFarmer($id)
     {
-        User::where('user_type', 'petani')->findOrFail($id)->delete();
-        return redirect()->route('dashboard.farmers')->with('success', 'Petani berhasil dihapus!');
+        $farmer = User::where('user_type', 'petani')->with('plantings')->findOrFail($id);
+        return response()->json($farmer);
     }
 
-    public function plantings()
+    public function updateFarmer(Request $request, $id)
     {
-        $plantings = Planting::with('user')->get();
-        return view('dashboard.plantings', compact('plantings'));
-    }
+        $farmer = User::where('user_type', 'petani')->findOrFail($id);
+        
+        $validated = $request->validate([
+            'name'          => 'required|string|max:255',
+            'nik'           => 'required|string|size:16',
+            'email'         => 'required|email|unique:users,email,'.$id,
+            'phone'         => 'required|string|max:20',
+            'district'      => 'required|string|max:100',
+            'village'       => 'required|string|max:100',
+            'address'       => 'required|string',
+            'area_hectares' => 'required|numeric',
+            'rice_variety'  => 'required|string',
+            'status'        => 'required|string',
+            'notes'         => 'nullable|string',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-    public function pestMonitoring()
-    {
-        $pestReports = PestReport::with(['user', 'planting'])->get();
-        return view('dashboard.pest-monitoring', compact('pestReports'));
+        $updatedFarmer = null;
+        DB::transaction(function () use ($request, $validated, $farmer, &$updatedFarmer) {
+            // Update foto jika ada
+            if ($request->hasFile('profile_photo')) {
+                // Hapus foto lama jika ada
+                if ($farmer->profile_photo_path) {
+                    Storage::disk('public')->delete($farmer->profile_photo_path);
+                }
+                $photoPath = $request->file('profile_photo')->store('farmers', 'public');
+                $farmer->profile_photo_path = $photoPath;
+            }
+
+            $farmer->update([
+                'name'     => $validated['name'],
+                'nik'      => $validated['nik'],
+                'email'    => $validated['email'],
+                'phone'    => $validated['phone'],
+                'district' => $validated['district'],
+                'village'  => $validated['village'],
+                'address'  => $validated['address'],
+            ]);
+
+            // Update atau buat planting
+            $planting = $farmer->plantings()->first();
+            if ($planting) {
+                $planting->update([
+                    'area_hectares' => $validated['area_hectares'],
+                    'rice_variety'  => $validated['rice_variety'],
+                    'status'        => $validated['status'],
+                    'notes'         => $validated['notes'] ?? null,
+                ]);
+            } else {
+                Planting::create([
+                    'user_id'       => $farmer->id,
+                    'area_hectares' => $validated['area_hectares'],
+                    'rice_variety'  => $validated['rice_variety'],
+                    'status'        => $validated['status'],
+                    'notes'         => $validated['notes'] ?? null,
+                    'location_name' => $validated['village'],
+                    'planting_date' => now(),
+                ]);
+            }
+
+            // Reload farmer dengan plantings sum
+            $updatedFarmer = User::where('user_type', 'petani')
+                ->with(['plantings'])
+                ->withSum('plantings', 'area_hectares')
+                ->find($id);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data petani berhasil diperbarui!',
+            'farmer' => $updatedFarmer
+        ]);
     }
 
     public function fertilizer()
     {
-        $schedules = FertilizerSchedule::with(['user', 'planting'])->get();
-        return view('dashboard.fertilizer', compact('schedules'));
+        $schedules = FertilizerSchedule::with(['user', 'planting'])->latest()->get();
+        $farmers = User::where('user_type', 'petani')->get();
+        $plantings = Planting::with('user')->get();
+        return view('dashboard.fertilizer', compact('schedules', 'farmers', 'plantings'));
     }
 
-    public function earlyWarning()
+    public function storeFertilizerSchedule(Request $request)
     {
-        return view('dashboard.early-warning');
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'planting_id' => 'nullable|exists:plantings,id',
+            'fertilizer_type' => 'required|string|max:100',
+            'amount_kg' => 'required|numeric|min:0',
+            'scheduled_date' => 'required|date',
+            'priority' => 'required|in:low,normal,high',
+            'delivery_method' => 'required|in:delivered,pickup,kios',
+            'officer_in_charge' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'status' => 'required|in:scheduled,pending,applied,cancelled',
+        ]);
+
+        FertilizerSchedule::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal distribusi pupuk berhasil ditambahkan!',
+        ]);
     }
 }

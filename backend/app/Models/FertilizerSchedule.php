@@ -18,6 +18,9 @@ class FertilizerSchedule extends Model
         'status',
         'applied_date',
         'notes',
+        'priority',
+        'delivery_method',
+        'officer_in_charge',
     ];
 
     protected $casts = [
