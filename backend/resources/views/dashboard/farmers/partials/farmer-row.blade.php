@@ -34,6 +34,6 @@
     </td>
     <td class="px-6 py-4 flex justify-center gap-2">
         <button onclick="openEditModal({{ $farmer->id }})" class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg border border-orange-200 hover:bg-orange-100 transition">Edit</button>
-        <button onclick="deleteFarmer({{ $farmer->id }})" class="bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-200 hover:bg-red-100 transition">Hapus</button>
+        <button onclick="deleteFarmer(event, {{ $farmer->id }})" class="bg-red-50 text-red-600 px-3 py-1 rounded-lg border border-red-200 hover:bg-red-100 transition">Hapus</button>
     </td>
 </tr>

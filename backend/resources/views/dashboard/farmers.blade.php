@@ -21,11 +21,6 @@
         <div class="flex items-center gap-3 w-full sm:w-auto">
             <input type="text" id="searchInput" placeholder="Cari petani..." 
                    class="border border-slate-200 rounded-full px-5 py-2.5 w-full sm:w-64 focus:ring-2 focus:ring-green-600 outline-none transition text-sm">
-           
-            <button onclick="toggleModal('modalTambah', true)" 
-                    class="bg-[#004d2e] text-white px-6 py-2.5 rounded-full font-semibold hover:bg-green-900 transition flex items-center gap-2 text-sm shrink-0">
-                <span>+</span> Tambah Petani
-            </button>
         </div>
     </div>
 
@@ -47,95 +42,6 @@
             @endforeach
         </tbody>
     </table>
-</div>
-
-<div id="modalTambah" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-1">
-            <h2 class="text-xl font-bold flex items-center gap-2">
-                <svg class="w-6 h-6 text-hijau-utama" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                Tambah Petani Baru
-            </h2>
-            <button type="button" onclick="toggleModal('modalTambah', false)" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <p class="text-gray-500 text-sm mb-6 ml-8">Lengkapi data petani untuk didaftarkan ke sistem PADIKU.</p>
-       
-        <form id="storeFarmerForm" enctype="multipart/form-data">
-            @csrf
-            <div class="mb-6">
-                <h3 class="text-xs font-bold text-hijau-utama mb-3 tracking-wider">DATA DIRI</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" placeholder="Bapak / Ibu ..." required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">NIK (16 digit) <span class="text-red-500">*</span></label>
-                        <input type="text" name="nik" placeholder="3215xxxxxxxxxxxx" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                        <input type="email" name="email" placeholder="nama@karawang.id" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Nomor Telepon <span class="text-red-500">*</span></label>
-                        <input type="text" name="phone" placeholder="0812-3456-7890" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <h3 class="text-xs font-bold text-hijau-utama mb-3 tracking-wider">LOKASI</h3>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Kecamatan <span class="text-red-500">*</span></label>
-                        <input type="text" name="district" placeholder="Ketik kecamatan" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Desa / Kelurahan <span class="text-red-500">*</span></label>
-                        <input type="text" name="village" placeholder="Nama desa" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Alamat Lengkap <span class="text-red-500">*</span></label>
-                    <input type="text" name="address" placeholder="Dusun, RT/RW, jalan..." required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <h3 class="text-xs font-bold text-hijau-utama mb-3 tracking-wider">DATA LAHAN & TANAM</h3>
-                <div class="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Luas Lahan (Ha) <span class="text-red-500">*</span></label>
-                        <input type="number" step="0.01" name="area_hectares" placeholder="2.5" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Varietas Padi <span class="text-red-500">*</span></label>
-                        <input type="text" name="rice_variety" placeholder="Ciherang" required class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
-                        <select name="status" class="border border-gray-300 p-2 rounded-lg w-full focus:ring-1 focus:ring-hijau-utama outline-none bg-white">
-                            <option value="persiapan">Persiapan</option>
-                            <option value="planted">Aktif Tanam</option>
-                            <option value="harvested">Sudah Panen</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Catatan (opsional)</label>
-                    <textarea name="notes" placeholder="Informasi tambahan tentang petani..." class="border border-gray-300 p-2 rounded-lg w-full h-20 focus:ring-1 focus:ring-hijau-utama outline-none"></textarea>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-3 mt-4 pt-4 border-t">
-                <button type="button" onclick="toggleModal('modalTambah', false)" class="px-6 py-2 bg-white border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="px-6 py-2 bg-hijau-utama text-white rounded-full font-medium hover:bg-green-800 transition-colors">Simpan Petani</button>
-            </div>
-        </form>
-    </div>
 </div>
 
 <div id="modalEdit" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -223,7 +129,7 @@
 
             <div class="flex justify-end gap-3 mt-4 pt-4 border-t">
                 <button type="button" onclick="toggleModal('modalEdit', false)" class="px-6 py-2 bg-white border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" class="px-6 py-2 bg-orange-600 text-white rounded-full font-medium hover:bg-orange-700 transition-colors">Perbarui Data</button>
+                <button type="submit" class="px-6 py-2 bg-orange-600 text-white rounded-full font-medium hover:bg-orange-700 transition-colors">Simpan Perubahan</button>
             </div>
         </form>
     </div>
@@ -285,11 +191,8 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex justify-center items-center gap-2">
-                        <button onclick="openEditModal(${farmer.id})" class="bg-slate-50 text-slate-600 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 transition text-xs font-semibold">Edit</button>
-                        <form action="{{ route('dashboard.farmers.destroy', ':id') }}" method="POST" onsubmit="return confirm('Yakin hapus data ini?')" style="display:inline;">
-                            @csrf @method('DELETE')
-                            <button type="submit" onclick="deleteFarmer(event, ${farmer.id})" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
-                        </form>
+                        <button onclick="openEditModal(${farmer.id})" class="bg-orange-50 text-orange-600 px-3.5 py-1.5 rounded-lg border border-orange-200 hover:bg-orange-100 transition text-xs font-semibold">Edit</button>
+                        <button onclick="deleteFarmer(event, ${farmer.id})" class="bg-red-50 text-red-600 px-3.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-100/50 transition text-xs font-semibold">Hapus</button>
                     </div>
                 </td>
             </tr>
@@ -314,38 +217,6 @@
             }
         });
         updateFarmerCount();
-    });
-
-    document.getElementById('storeFarmerForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        
-        try {
-            const response = await fetch('{{ route('dashboard.farmers.store') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                allFarmers.push(data.farmer);
-                const tbody = document.getElementById('farmersTableBody');
-                tbody.insertAdjacentHTML('beforeend', renderFarmerRow(data.farmer));
-                this.reset();
-                toggleModal('modalTambah', false);
-                alert(data.message);
-                updateFarmerCount();
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Gagal menyimpan data petani');
-        }
     });
 
     async function openEditModal(farmerId) {
@@ -381,12 +252,17 @@
         e.preventDefault();
         const farmerId = document.getElementById('edit_farmer_id').value;
         const formData = new FormData(this);
+        formData.append('_method', 'PUT');
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Menyimpan...';
 
         try {
             const response = await fetch(`/dashboard/farmers/${farmerId}`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'X-CSRF-TOKEN': this.querySelector('input[name="_token"]').value,
                     'Accept': 'application/json'
                 },
                 body: formData
@@ -402,33 +278,36 @@
                 if (oldRow) {
                     oldRow.outerHTML = renderFarmerRow(data.farmer);
                 }
-                this.reset();
                 toggleModal('modalEdit', false);
-                alert(data.message);
+                alert('Data petani berhasil diperbarui!');
             }
         } catch (error) {
             console.error('Error:', error);
             alert('Gagal memperbarui data petani');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Simpan Perubahan';
         }
     });
 
-    function deleteFarmer(event, farmerId) {
+    async function deleteFarmer(event, farmerId) {
         event.preventDefault();
         if (!confirm('Yakin ingin menghapus data petani ini?')) {
             return;
         }
         
-        const form = event.target.closest('form');
-        form.action = form.action.replace(':id', farmerId);
-        
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                'Accept': 'application/json'
-            }
-        }).then(response => response.json())
-        .then(data => {
+        try {
+            const response = await fetch(`/dashboard/farmers/${farmerId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
             if (data.success) {
                 allFarmers = allFarmers.filter(f => f.id !== farmerId);
                 const row = document.querySelector(`.farmer-row[data-id="${farmerId}"]`);
@@ -436,9 +315,14 @@
                     row.remove();
                 }
                 updateFarmerCount();
-                alert(data.message);
+                alert('Petani berhasil dihapus!');
+            } else {
+                alert('Gagal menghapus petani');
             }
-        });
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Gagal menghapus petani');
+        }
     }
 </script>
 
