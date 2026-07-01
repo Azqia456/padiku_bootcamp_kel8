@@ -149,27 +149,45 @@
         });
 
         plantingsData.forEach(function(p) {
-            if (!p.expected_harvest_date) return;
-            var date = p.expected_harvest_date.substring(0, 10);
-            var weekStr = getWeekString(p.expected_harvest_date);
+            var userName = p.user ? p.user.name : 'Anonim';
             var district = p.user ? p.user.district : 'Unknown';
-            var key = weekStr + '_' + district;
-            
-            // Jika ada > 1 lahan di kecamatan yang sama pada MINGGU yang sama, tandai bahaya
-            var isConflict = weekCounts[key] >= 2;
-            var bgColor = isConflict ? 'bg-red-50 text-red-700 ring-red-200' : 'bg-emerald-50 text-emerald-700 ring-emerald-200';
-            var icon = isConflict ? '⚠️' : '🌾';
-            
-            events.push({
-                title: icon + ' ' + (p.user ? p.user.name : 'Anonim'),
-                start: date,
-                allDay: true,
-                extendedProps: {
-                    bgColorClass: bgColor,
-                    location: p.location_name,
-                    district: district
-                }
-            });
+
+            // 1. Event Tanggal Tanam
+            if (p.planting_date) {
+                var plantingDateStr = p.planting_date.substring(0, 10);
+                events.push({
+                    title: '🌱 Tanam: ' + userName,
+                    start: plantingDateStr,
+                    allDay: true,
+                    extendedProps: {
+                        bgColorClass: 'bg-green-50 text-green-700 ring-green-200',
+                        location: p.location_name,
+                        district: district
+                    }
+                });
+            }
+
+            // 2. Event Estimasi Panen
+            if (p.expected_harvest_date) {
+                var harvestDateStr = p.expected_harvest_date.substring(0, 10);
+                var weekStr = getWeekString(p.expected_harvest_date);
+                var key = weekStr + '_' + district;
+                
+                var isConflict = weekCounts[key] >= 2;
+                var bgColor = isConflict ? 'bg-red-50 text-red-700 ring-red-200' : 'bg-yellow-50 text-yellow-700 ring-yellow-200';
+                var icon = isConflict ? '⚠️ Panen: ' : '🌾 Panen: ';
+                
+                events.push({
+                    title: icon + userName,
+                    start: harvestDateStr,
+                    allDay: true,
+                    extendedProps: {
+                        bgColorClass: bgColor,
+                        location: p.location_name,
+                        district: district
+                    }
+                });
+            }
         });
 
         var calendar = new FullCalendar.Calendar(calendarEl, {

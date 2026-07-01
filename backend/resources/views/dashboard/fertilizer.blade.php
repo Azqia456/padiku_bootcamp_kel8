@@ -34,38 +34,7 @@
     image="complementary.webp"
 />
 
-@if($alertVillages && $alertVillages->count() > 0)
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
-        <h3 class="font-bold text-amber-800 text-sm mb-3 flex items-center gap-2">
-            <span class="text-base">⚠️</span> Rekomendasi Distribusi Pestisida Nabati Gratis
-        </h3>
-        <p class="text-xs text-amber-700 leading-relaxed mb-4">
-            Desa-desa berikut saat ini berstatus **Waspada** akibat serangan hama. Direkomendasikan segera membagikan bantuan **Pestisida Nabati Gratis dan perlindungan hama ke lokasi tersebut:
-        </p>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach($alertVillages as $v)
-                <div class="bg-white rounded-xl border border-amber-100 p-4 flex justify-between items-center shadow-sm">
-                    <div>
-                        <p class="font-bold text-sm text-slate-800">Desa {{ $v->village }}</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Jumlah pelapor: <b>{{ $v->reporter_count }}</b></p>
-                    </div>
-                    <button onclick="distributePesticide('{{ $v->village }}')" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-3.5 py-2 rounded-full shadow-sm transition active:scale-95">
-                        Kirim Bantuan
-                    </button>
-                </div>
-            @endforeach
-        </div>
-    </div>
-@else
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6">
-        <h3 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-2">
-            <span class="text-emerald-500 text-base">✓</span> Info Rekomendasi Distribusi Pestisida Nabati
-        </h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-            Belum ada desa yang berstatus **Waspada (≥ 3 pelapor)**. Rekomendasi pembagian pestisida gratis akan otomatis muncul di sini untuk membantu mempercepat bantuan bagi wilayah yang sedang terjangkit serangan hama.
-        </p>
-    </div>
-@endif
+
 
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#0A5C34]">
@@ -90,6 +59,27 @@
             Tambah Jadwal
         </button>
     </div>
+    @if(isset($growingPlantings) && $growingPlantings->count() > 0)
+        <div class="p-6 bg-emerald-50/40 border-b border-emerald-100/80">
+            <h3 class="font-bold text-emerald-800 text-sm mb-3">
+                Rekomendasi Distribusi Pupuk Segera (Fase Pertumbuhan)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($growingPlantings as $p)
+                    <div class="bg-white rounded-xl border border-emerald-100 p-4 flex justify-between items-center shadow-sm">
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">{{ $p->user->name ?? 'Petani' }}</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Lahan: {{ $p->location_name }} ({{ number_format($p->area_hectares, 1) }} Ha)</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Desa {{ $p->user->village ?? '-' }}, Kec. {{ $p->user->district ?? '-' }}</p>
+                        </div>
+                        <button onclick="quickScheduleFertilizer({{ $p->user_id }}, '{{ addslashes($p->user->name ?? 'Petani') }}', {{ $p->area_hectares }})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-full shadow-sm transition active:scale-95">
+                            Jadwalkan
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-600">
@@ -390,7 +380,7 @@
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
-        ).then(res => res.json())
+        }).then(res => res.json())
         .then(data => {
             if (data.success) {
                 alert(data.message);
@@ -401,6 +391,31 @@
             console.error(err);
             alert('Terjadi kesalahan jaringan.');
         });
+    }
+
+    function quickScheduleFertilizer(userId, farmerName, area) {
+        // Toggle the modal
+        toggleModal('modalTambah', true);
+        
+        // Pre-fill fields
+        $('#schedule_user_id').val(userId).trigger('change');
+        $('#schedule_fertilizer_type').val('Urea');
+        
+        // Calculate recommended amount (e.g. 150 kg per Hectare)
+        let recommendedAmount = Math.round(area * 150);
+        $('#schedule_amount_kg').val(recommendedAmount);
+        
+        $('#schedule_priority').val('high');
+        
+        // Default scheduled date = today + 3 days
+        let targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 3);
+        let dateStr = targetDate.toISOString().split('T')[0];
+        $('#schedule_scheduled_date').val(dateStr);
+        
+        $('#schedule_officer_in_charge').val('Tim Distribusi Lapangan');
+        $('#schedule_status').val('scheduled');
+        $('#schedule_notes').val('Jadwal dibuat otomatis karena lahan memasuki fase pertumbuhan.');
     }
 
     function distributePesticide(villageName) {

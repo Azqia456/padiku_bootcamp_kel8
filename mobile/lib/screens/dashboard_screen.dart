@@ -2277,6 +2277,8 @@ class JadwalTanamModule extends StatefulWidget {
 
 class _JadwalTanamModuleState extends State<JadwalTanamModule> {
   DateTime _selectedDate = DateTime.now();
+  DateTime _calendarMonth = DateTime.now();
+  List<dynamic> _savedPlantings = [];
   bool _isLoading = false;
   bool _isSubmitting = false;
   bool _isConflict = false;
@@ -2302,7 +2304,6 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
   late final TextEditingController _varietasController;
   late final TextEditingController _luasController;
 
-  // State untuk To-Do List
   final List<Map<String, dynamic>> _tasks = [
     {
       'title': 'Pemupukan Tahap 1',
@@ -2331,8 +2332,20 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
     super.initState();
     _varietasController = TextEditingController(text: 'Ciherang');
     _luasController = TextEditingController(text: '1.0');
-    // Run conflict check for initial date
+    _calendarMonth = DateTime.now();
     _checkConflict();
+    _loadSavedPlantings();
+  }
+
+  Future<void> _loadSavedPlantings() async {
+    try {
+      final list = await ApiService.getPlantings();
+      if (mounted) {
+        setState(() {
+          _savedPlantings = list;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -2444,6 +2457,18 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
           backgroundColor: result['success'] ? AppColors.riceGreen : const Color(0xFFEF5350),
         ),
       );
+
+      if (result['success']) {
+        _loadSavedPlantings();
+        if (_expectedHarvestDate != null) {
+          try {
+            final harvestDate = DateTime.parse(_expectedHarvestDate!);
+            setState(() {
+              _calendarMonth = DateTime(harvestDate.year, harvestDate.month);
+            });
+          } catch (_) {}
+        }
+      }
     }
   }
 
@@ -2841,6 +2866,19 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
   Widget _buildMockCalendar() {
     const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     
+    // First day of displayed month
+    final firstDayOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
+    // Weekday of the first day (Monday = 1, Sunday = 7)
+    // We adjust it so Monday is index 0:
+    int firstDayOffset = firstDayOfMonth.weekday - 1;
+    if (firstDayOffset < 0) firstDayOffset = 6;
+    
+    // Days in the displayed month
+    final lastDayOfMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0);
+    int daysInMonth = lastDayOfMonth.day;
+    
+    int totalCells = firstDayOffset + daysInMonth;
+    
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -2857,12 +2895,26 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.chevron_left_rounded, color: Colors.black54),
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded, color: Colors.black54),
+                  onPressed: () {
+                    setState(() {
+                      _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month - 1);
+                    });
+                  },
+                ),
                 Text(
-                  '${_getNamaBulan(_selectedDate.month)} ${_selectedDate.year}',
+                  '${_getNamaBulan(_calendarMonth.month)} ${_calendarMonth.year}',
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: Colors.black54),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded, color: Colors.black54),
+                  onPressed: () {
+                    setState(() {
+                      _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1);
+                    });
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -2879,48 +2931,104 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
               ),
-              itemCount: 30,
+              itemCount: totalCells,
               itemBuilder: (context, index) {
-                int day = index + 1;
-                bool isSelectedDay = day == _selectedDate.day;
-                bool hasTask = day == 15 || day == 30;
+                if (index < firstDayOffset) {
+                  return const SizedBox();
+                }
+                
+                int day = index - firstDayOffset + 1;
+                final cellDate = DateTime(_calendarMonth.year, _calendarMonth.month, day);
+                
+                // Check if this date has any planting event
+                bool isPlantingDate = false;
+                bool isHarvestDate = false;
+                
+                for (var p in _savedPlantings) {
+                  try {
+                    if (p['planting_date'] != null) {
+                      final pDate = DateTime.parse(p['planting_date'].toString().split('T')[0]);
+                      if (pDate.year == cellDate.year && pDate.month == cellDate.month && pDate.day == cellDate.day) {
+                        isPlantingDate = true;
+                      }
+                    }
+                    if (p['expected_harvest_date'] != null) {
+                      final hDate = DateTime.parse(p['expected_harvest_date'].toString().split('T')[0]);
+                      if (hDate.year == cellDate.year && hDate.month == cellDate.month && hDate.day == cellDate.day) {
+                        isHarvestDate = true;
+                      }
+                    }
+                  } catch (_) {}
+                }
+                
+                // Check if currently selected date (unsaved) matches this cellDate
+                bool isSelectedDate = _selectedDate.year == cellDate.year &&
+                                     _selectedDate.month == cellDate.month &&
+                                     _selectedDate.day == cellDate.day;
+
+                Color cellColor = Colors.transparent;
+                Border? cellBorder;
+                TextStyle textStyle = const TextStyle(color: Colors.black87, fontSize: 13);
+                
+                if (isSelectedDate) {
+                  cellColor = AppColors.riceGreen.withAlpha(50);
+                  cellBorder = Border.all(color: AppColors.riceGreen, width: 1.5);
+                }
+                
+                if (isPlantingDate) {
+                  cellColor = AppColors.riceGreen;
+                  textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13);
+                } else if (isHarvestDate) {
+                  cellColor = AppColors.riceYellow;
+                  textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13);
+                }
 
                 return Container(
                   decoration: BoxDecoration(
-                    color: isSelectedDay ? AppColors.riceGreen : Colors.transparent,
+                    color: cellColor,
                     shape: BoxShape.circle,
-                    border: hasTask && !isSelectedDay ? Border.all(color: Colors.orange, width: 2) : null,
+                    border: cellBorder,
                   ),
                   alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$day',
-                        style: TextStyle(
-                          color: isSelectedDay ? Colors.white : Colors.black87,
-                          fontWeight: isSelectedDay || hasTask ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 13,
-                        ),
-                      ),
-                      if (hasTask)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: isSelectedDay ? Colors.white : Colors.orange,
-                            shape: BoxShape.circle,
-                          ),
-                        )
-                    ],
+                  child: Text(
+                    '$day',
+                    style: textStyle,
                   ),
                 );
               },
             ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildLegendItem(AppColors.riceGreen, 'Tgl Tanam'),
+                const SizedBox(width: 16),
+                _buildLegendItem(AppColors.riceYellow, 'Prediksi Panen'),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 12, color: Colors.black87),
+        ),
+      ],
     );
   }
 

@@ -56,6 +56,7 @@ class PlantingController extends Controller
             'planting_date' => $validated['planting_date'],
             'rice_variety' => $validated['rice_variety'],
             'expected_harvest_date' => $validated['expected_harvest_date'] ?? $plantingDate->copy()->addDays(90)->format('Y-m-d'),
+            'status' => 'planted',
             'notes' => $validated['notes'] ?? null,
         ]);
 

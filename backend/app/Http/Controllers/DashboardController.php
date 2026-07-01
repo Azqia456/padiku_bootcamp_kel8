@@ -406,7 +406,16 @@ class DashboardController extends Controller
             ->having('reporter_count', '>=', 3)
             ->get();
 
-        return view('dashboard.fertilizer', compact('schedules', 'farmers', 'plantings', 'alertVillages'));
+        $growingPlantings = Planting::where('status', 'growing')
+            ->with('user')
+            ->get()
+            ->filter(function($p) {
+                return !FertilizerSchedule::where('user_id', $p->user_id)
+                    ->whereIn('status', ['scheduled', 'pending'])
+                    ->exists();
+            });
+
+        return view('dashboard.fertilizer', compact('schedules', 'farmers', 'plantings', 'alertVillages', 'growingPlantings'));
     }
 
     public function storeFertilizerSchedule(Request $request)
