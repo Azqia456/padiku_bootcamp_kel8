@@ -721,10 +721,19 @@ class _HomeDashboardState extends State<HomeDashboard> {
 
   Future<void> _loadDashboardData() async {
     final profile = await ApiService.getUserProfile();
+    final plantings = await ApiService.getPlantings();
+    
+    double totalLahan = 0;
+    for (var p in plantings) {
+      if (p['status'] != 'harvested') {
+        totalLahan += double.tryParse(p['area_hectares'].toString()) ?? 0.0;
+      }
+    }
+
     if (mounted) {
       setState(() {
         _userName = profile['name'] ?? 'Petani';
-        _lahanAktif = profile['lahan_aktif'] ?? '0';
+        _lahanAktif = totalLahan > 0 ? totalLahan.toStringAsFixed(2).replaceAll(RegExp(r'([.]*0)(?!.*\d)'), '') : '0';
       });
     }
   }
@@ -1650,11 +1659,18 @@ class _DataLahanModuleState extends State<DataLahanModule> {
       _isLoading = true;
     });
     try {
-      final profile = await ApiService.getUserProfile();
       final list = await ApiService.getPlantings();
+      
+      double totalLahan = 0;
+      for (var p in list) {
+        if (p['status'] != 'harvested') {
+          totalLahan += double.tryParse(p['area_hectares'].toString()) ?? 0.0;
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _lahanAktif = profile['lahan_aktif'] ?? '0';
+          _lahanAktif = totalLahan > 0 ? totalLahan.toStringAsFixed(2).replaceAll(RegExp(r'([.]*0)(?!.*\d)'), '') : '0';
           _landList = list;
           _isLoading = false;
         });
@@ -2286,12 +2302,7 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
   String? _expectedHarvestDate;
   String? _recommendationDate;
 
-  String _selectedLahan = 'Sawah Blok A';
-  final List<String> _lahanOptions = [
-    'Sawah Blok A',
-    'Sawah Blok Utara',
-    'Lahan Belakang Rumah'
-  ];
+  int? _selectedLahanId;
 
   final List<String> _metodeOptions = [
     'Tandur (manual)',
@@ -2343,9 +2354,22 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
       if (mounted) {
         setState(() {
           _savedPlantings = list;
+          if (_savedPlantings.isNotEmpty && _selectedLahanId == null) {
+            _selectedLahanId = _savedPlantings.first['id'];
+            _updateFieldsForSelectedLahan();
+          }
         });
       }
     } catch (_) {}
+  }
+
+  void _updateFieldsForSelectedLahan() {
+    if (_selectedLahanId == null) return;
+    final selected = _savedPlantings.firstWhere((p) => p['id'] == _selectedLahanId, orElse: () => null);
+    if (selected != null) {
+      _varietasController.text = selected['rice_variety'] ?? 'Ciherang';
+      _luasController.text = (selected['area_hectares'] ?? 1.0).toString();
+    }
   }
 
   @override
@@ -2427,23 +2451,21 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
   }
 
   Future<void> _savePlanting() async {
+    if (_selectedLahanId == null) return;
     setState(() {
       _isSubmitting = true;
     });
 
     final dateStr = "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}";
     final data = {
-      'location_name': _selectedLahan,
-      'area_hectares': double.tryParse(_luasController.text) ?? 1.0,
       'planting_date': dateStr,
       'expected_harvest_date': _expectedHarvestDate,
       'rice_variety': _varietasController.text.isNotEmpty ? _varietasController.text : 'Ciherang',
       'notes': 'Metode: $_selectedMetode',
-      'latitude': -6.32,
-      'longitude': 107.33,
+      'status': 'planned',
     };
 
-    final result = await ApiService.submitPlanting(data);
+    final result = await ApiService.updatePlanting(_selectedLahanId!, data);
 
     if (mounted) {
       setState(() {
@@ -2795,21 +2817,28 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButtonFormField<String>(
-              value: _selectedLahan,
-              items: _lahanOptions.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+            DropdownButtonFormField<int>(
+              value: _selectedLahanId,
+              items: _savedPlantings.map((item) {
+                return DropdownMenuItem<int>(
+                  value: item['id'],
+                  child: Text(item['location_name'] ?? 'Lahan ${item['id']}'),
+                );
+              }).toList(),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
-                    _selectedLahan = val;
+                    _selectedLahanId = val;
+                    _updateFieldsForSelectedLahan();
                   });
                 }
               },
-              decoration: _inputDecoration(label: 'Pilih Lahan', icon: Icons.landscape_rounded),
+              decoration: _inputDecoration(label: 'Pilih Lahan', icon: Icons.landscape),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _varietasController,
+              readOnly: true,
               decoration: _inputDecoration(label: 'Varietas Padi', icon: Icons.grass_rounded),
             ),
             const SizedBox(height: 12),
@@ -2829,6 +2858,7 @@ class _JadwalTanamModuleState extends State<JadwalTanamModule> {
             TextFormField(
               controller: _luasController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              readOnly: true,
               decoration: _inputDecoration(label: 'Luas Lahan (Hektar)', icon: Icons.straighten_rounded),
             ),
             const SizedBox(height: 16),

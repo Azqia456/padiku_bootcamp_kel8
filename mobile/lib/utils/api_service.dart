@@ -279,6 +279,35 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> updatePlanting(int id, Map<String, dynamic> data) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Anda belum login'};
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/plantings/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Jadwal Tanam berhasil diperbarui'};
+      } else {
+        return {'success': false, 'message': responseData['message'] ?? 'Gagal memperbarui jadwal'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Koneksi bermasalah: $e'};
+    }
+  }
+
   static Future<Map<String, dynamic>> submitPestReport(Map<String, dynamic> reportData) async {
     try {
       final token = await getToken();
