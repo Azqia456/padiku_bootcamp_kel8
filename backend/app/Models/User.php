@@ -30,6 +30,8 @@ class User extends Authenticatable
         'profile_photo_path',
         'status',
         'document_path',
+        'last_login_at',
+        'last_login_ip',
     ];
 
     /**
